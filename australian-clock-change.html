@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Australian Clock Change</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f0f4f8;
+      background-image: linear-gradient(to bottom, #e0f2fe, #f0f4f8);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    @keyframes clockspin {
+      0% { transform: rotate(0deg); }
+      25% { transform: rotate(5deg); }
+      75% { transform: rotate(-5deg); }
+      100% { transform: rotate(0deg); }
+    }
+    
+    .container {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      max-width: 600px;
+      width: 90%;
+      text-align: center;
+    }
+    
+    h1 {
+      color: #1a365d;
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .subtitle {
+      color: #4a5568;
+      margin-bottom: 1.5rem;
+    }
+    
+    .info-box {
+      background: #e6fffa;
+      border: 2px solid #38b2ac;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1rem 0;
+      font-size: 1.2rem;
+      line-height: 1.6;
+    }
+    
+    .highlight {
+      color: #2b6cb0;
+      font-weight: bold;
+    }
+    
+    .tonight {
+      display: inline-block;
+      background: #f6e05e;
+      color: #744210;
+      padding: 0.2em 0.5em;
+      border-radius: 4px;
+      margin-left: 0.5em;
+      font-weight: bold;
+    }
+    
+    .wrong-timezone {
+      background: #fed7d7;
+      border: 2px solid #f56565;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1rem 0;
+      font-size: 1.2rem;
+      line-height: 1.6;
+      color: #c53030;
+    }
+    
+    .fun-fact {
+      background: #fefcbf;
+      border: 2px dashed #d69e2e;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1rem 0;
+      font-size: 1.2rem;
+      line-height: 1.6;
+    }
+    
+    .animation-pulse {
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    
+    .body-clock {
+      background: #ebf8ff;
+      border: 2px solid #4299e1;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1rem 0;
+      font-size: 1.2rem;
+      line-height: 1.6;
+    }
+    
+    .past-change {
+      background: #faf5ff;
+      border: 2px solid #805ad5;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1rem 0;
+      font-size: 1.2rem;
+      line-height: 1.6;
+    }
+    
+    .timezone-selector {
+      margin: 1rem 0;
+    }
+    
+    select, input, textarea {
+      font-size: 16px;
+      padding: 0.5em;
+      border-radius: 4px;
+      border: 1px solid #cbd5e0;
+      transition: all 0.2s ease;
+    }
+    
+    select:focus, input:focus, textarea:focus {
+      border-color: #4299e1;
+      box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+      outline: none;
+    }
+    
+    button {
+      background-color: #4299e1;
+      color: white;
+      border: none;
+      padding: 0.5em 1em;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    
+    button:hover {
+      background-color: #3182ce;
+    }
+    
+    #timezone-select {
+      padding: 8px 16px;
+      background-color: white;
+      border: 2px solid #4299e1;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .emoji-bounce {
+      display: inline-block;
+      animation: bounce 1s infinite alternate;
+    }
+    
+    @keyframes bounce {
+      from { transform: translateY(0); }
+      to { transform: translateY(-5px); }
+    }
+    
+    @media (max-width: 480px) {
+      .container {
+        padding: 1.5rem;
+      }
+      h1 {
+        font-size: 1.5rem;
+      }
+      .info-box, .body-clock, .past-change {
+        font-size: 1.1rem;
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1><span style="display: inline-block; animation: clockspin 3s ease-in-out infinite;">🕒</span> Australian Clock Change 🦘</h1>
+    <div class="subtitle">G'day! Find your local time change info, mate</div>
+    
+    <div class="timezone-selector">
+      <select id="timezone-select">
+        <option value="Australia/Sydney">Sydney/NSW/ACT (AEST/AEDT)</option>
+        <option value="Australia/Melbourne">Melbourne/Victoria (AEST/AEDT)</option>
+        <option value="Australia/Hobart">Tasmania (AEST/AEDT)</option>
+        <option value="Australia/Adelaide">Adelaide/South Australia (ACST/ACDT)</option>
+        <option value="Australia/Brisbane">Brisbane/Queensland (AEST only - no DST)</option>
+        <option value="Australia/Darwin">Darwin/Northern Territory (ACST only - no DST)</option>
+        <option value="Australia/Perth">Perth/Western Australia (AWST only - no DST)</option>
+      </select>
+    </div>
+    
+    <div id="timezone-info"></div>
+    <div id="past-change"></div>
+    <div id="future-change"></div>
+    <div id="body-clock"></div>
+    <div id="current-dst"></div>
+    <div id="fun-fact" class="fun-fact"></div>
+  </div>
+
+  <script type="module">
+// Australian timezone information
+const timeZones = {
+  "Australia/Sydney": { 
+    name: "Sydney/NSW/ACT", 
+    shortName: "AEST/AEDT",
+    hasDst: true 
+  },
+  "Australia/Melbourne": { 
+    name: "Melbourne/Victoria", 
+    shortName: "AEST/AEDT",
+    hasDst: true 
+  },
+  "Australia/Hobart": { 
+    name: "Tasmania", 
+    shortName: "AEST/AEDT",
+    hasDst: true 
+  },
+  "Australia/Adelaide": { 
+    name: "Adelaide/South Australia", 
+    shortName: "ACST/ACDT",
+    hasDst: true 
+  },
+  "Australia/Brisbane": { 
+    name: "Brisbane/Queensland", 
+    shortName: "AEST only",
+    hasDst: false 
+  },
+  "Australia/Darwin": { 
+    name: "Darwin/Northern Territory", 
+    shortName: "ACST only",
+    hasDst: false 
+  },
+  "Australia/Perth": { 
+    name: "Perth/Western Australia", 
+    shortName: "AWST only",
+    hasDst: false 
+  }
+};
+
+// Detect user's timezone
+function detectUserTimezone() {
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  
+  // If Australian timezone, select it
+  if (timezone.startsWith("Australia/")) {
+    if (document.getElementById("timezone-select").querySelector(`option[value="${timezone}"]`)) {
+      document.getElementById("timezone-select").value = timezone;
+    }
+  }
+}
+
+// Get clock changes for Australian timezones with DST
+function getClockChanges(timezone) {
+  const now = new Date();
+  const year = now.getFullYear();
+  const tzInfo = timeZones[timezone];
+  
+  // If timezone doesn't observe DST, return null
+  if (!tzInfo.hasDst) {
+    return { pastChange: null, futureChange: null };
+  }
+  
+  // Get changes for current and adjacent years to handle year boundaries
+  function getYearChanges(y) {
+    // First Sunday in October - Spring forward
+    let springForward = new Date(Date.UTC(y, 9, 1));
+    while (springForward.getDay() !== 0) {
+      springForward.setDate(springForward.getDate() + 1);
+    }
+    
+    // First Sunday in April - Fall back
+    let fallBack = new Date(Date.UTC(y, 3, 1));
+    while (fallBack.getDay() !== 0) {
+      fallBack.setDate(fallBack.getDate() + 1);
+    }
+    
+    // Convert to the specific timezone
+    springForward = new Date(springForward.toLocaleString('en-US', { timeZone: timezone }));
+    fallBack = new Date(fallBack.toLocaleString('en-US', { timeZone: timezone }));
+    
+    // Set both to 2:00 AM in local time
+    springForward.setHours(2, 0, 0, 0);
+    fallBack.setHours(2, 0, 0, 0);
+    
+    return [
+      { date: springForward, isSpringForward: true },
+      { date: fallBack, isSpringForward: false }
+    ];
+  }
+
+  const changes = [
+    ...getYearChanges(year - 1),
+    ...getYearChanges(year),
+    ...getYearChanges(year + 1)
+  ].sort((a, b) => a.date - b.date);
+
+  // Find the most recent past change and next future change
+  const pastChange = changes.filter(change => change.date < now).pop();
+  const futureChange = changes.find(change => change.date > now);
+
+  return { pastChange, futureChange };
+}
+
+function formatDate(date) {
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                 'July', 'August', 'September', 'October', 'November', 'December'];
+  return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+}
+
+function formatTime(date) {
+  return date.toLocaleTimeString('en-US', { 
+    hour: 'numeric', 
+    minute: '2-digit', 
+    hour12: true 
+  });
+}
+
+function getDaysSince(date) {
+  const now = new Date();
+  const diffTime = Math.abs(now - date);
+  return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+}
+
+function updateBodyClockInfo(pastChange) {
+  const bodyClockDiv = document.getElementById('body-clock');
+  
+  if (!pastChange) {
+    bodyClockDiv.innerHTML = '';
+    return;
+  }
+  
+  const daysSince = getDaysSince(pastChange.date);
+  
+  if (daysSince <= 7) {  // Show message for a week after the change
+    const now = new Date();
+    const petClock = new Date(now);
+    
+    if (pastChange.isSpringForward) {
+      petClock.setHours(now.getHours() - 1);
+    } else {
+      petClock.setHours(now.getHours() + 1);
+    }
+    
+    bodyClockDiv.className = 'body-clock';
+    bodyClockDiv.innerHTML = `
+      <p><span class="emoji-bounce">🐨</span> <span class="emoji-bounce">🐕</span> <span class="emoji-bounce">😴</span> Confused Creatures!</p>
+      <p>Your clock says it's <span class="highlight">${formatTime(now)}</span>, but your 
+      pet thinks it's <span class="highlight">${formatTime(petClock)}</span>!</p>
+      <p>Australian animals and pets have reliable internal body clocks (even kangaroos!) 
+      and don't understand our human time changes.</p>
+      <p>If your pet seems hungry or confused at odd times, that's why! They'll adjust in a few days.</p>
+    `;
+  } else {
+    bodyClockDiv.innerHTML = '';
+  }
+}
+
+function updateInfo() {
+  const selectedTimezone = document.getElementById('timezone-select').value;
+  const tzInfo = timeZones[selectedTimezone];
+  
+  document.getElementById('timezone-info').className = 'info-box';
+  document.getElementById('timezone-info').innerHTML = `
+    <div>Selected timezone:</div>
+    <span class="highlight">${tzInfo.name} (${tzInfo.shortName})</span>
+    ${!tzInfo.hasDst ? '<p>This region does not observe Daylight Saving Time.</p>' : ''}
+  `;
+  
+  const { pastChange, futureChange } = getClockChanges(selectedTimezone);
+  
+  // For timezones without DST
+  if (!tzInfo.hasDst) {
+    document.getElementById('past-change').className = 'info-box';
+    document.getElementById('past-change').innerHTML = `
+      <div>No clock changes here!</div>
+      <p>This region doesn't use Daylight Saving Time, so you can sleep easy all year round. 😴</p>
+      <p>While other Aussies are adjusting their clocks, you get to keep the same routine!</p>
+    `;
+    
+    document.getElementById('future-change').className = 'info-box';
+    document.getElementById('future-change').innerHTML = `
+      <div class="animation-pulse">Congratulations! 🎉</div>
+      <p>Your region stays on ${tzInfo.shortName} all year.</p>
+      <p>No need to remember to change any clocks - ever!</p>
+    `;
+    
+    document.getElementById('body-clock').innerHTML = '';
+    document.getElementById('current-dst').innerHTML = '';
+    updateFunFact(selectedTimezone);
+    return;
+  }
+  
+  // Show past change
+  const pastChangeDiv = document.getElementById('past-change');
+  const pastSaturday = new Date(pastChange.date);
+  pastSaturday.setDate(pastChange.date.getDate() - 1);
+  
+  pastChangeDiv.className = 'past-change';
+  pastChangeDiv.innerHTML = `
+    <div>Most recent change:</div>
+    On <span class="highlight">Sunday, ${formatDate(pastChange.date)}</span>, 
+    clocks ${pastChange.isSpringForward ? 'moved forward' : 'moved back'} 
+    (you ${pastChange.isSpringForward ? 'lost' : 'gained'} one hour of sleep).
+  `;
+
+  // Show future change
+  const futureChangeDiv = document.getElementById('future-change');
+  const futureSaturday = new Date(futureChange.date);
+  futureSaturday.setDate(futureChange.date.getDate() - 1);
+
+  const now = new Date();
+  const isTonight = now.getDate() === futureSaturday.getDate() && 
+                  now.getMonth() === futureSaturday.getMonth() && 
+                  now.getFullYear() === futureSaturday.getFullYear();
+
+  const sleepEffect = futureChange.isSpringForward ? 'lose an hour of sleep' : 'get an extra hour of sleep';
+  const clockEffect = futureChange.isSpringForward ? 
+      'clocks move forward from 2:00 AM to 3:00 AM' : 
+      'clocks move back from 3:00 AM to 2:00 AM';
+
+  const tonightBadge = isTonight ? '<span class="tonight">That\'s tonight!</span>' : '';
+
+  futureChangeDiv.className = 'info-box';
+  futureChangeDiv.innerHTML = `
+    <div>Next change:</div>
+    When you go to bed on <span class="highlight">Saturday, ${formatDate(futureSaturday)}</span>${tonightBadge}, 
+    you will ${sleepEffect}!<br><br>
+    The ${clockEffect} on 
+    <span class="highlight">Sunday, ${formatDate(futureChange.date)}</span>.
+  `;
+
+  // Update body clock info based on past change
+  updateBodyClockInfo(pastChange);
+
+  // Determine if it is currently daylight savings time or not
+  const currentDstDiv = document.getElementById('current-dst');
+  const isDst = pastChange.isSpringForward;
+  
+  currentDstDiv.className = 'info-box';
+  
+  // Australian Standard Time abbreviations
+  let standardAbbr = "AEST"; // Eastern Standard Time
+  let daylightAbbr = "AEDT"; // Eastern Daylight Time
+  
+  if (selectedTimezone === "Australia/Adelaide") {
+    standardAbbr = "ACST"; // Central Standard Time
+    daylightAbbr = "ACDT"; // Central Daylight Time
+  }
+  
+  currentDstDiv.innerHTML = `
+    <div>Current status:</div>
+    <p>It is currently <span class="highlight">${isDst ? 'Daylight Saving Time (' + daylightAbbr + ')' : 'Standard Time (' + standardAbbr + ')'}</span>.</p>
+    <p>${isDst ? 
+      '☀️ Enjoying longer summer evenings!' : 
+      '🌙 Standard time - mornings are brighter!'}</p>
+  `;
+}
+
+// Fun facts about Australian time zones
+function updateFunFact(timezone) {
+  const funFactDiv = document.getElementById('fun-fact');
+  
+  const funFacts = {
+    "Australia/Sydney": [
+      "Sydney was one of the first major cities in the world to implement Daylight Saving Time in 1917.",
+      "NSW has changed its DST start and end dates more than 10 times since it was introduced.",
+      "The Sydney Opera House clock requires special attention during time changes."
+    ],
+    "Australia/Melbourne": [
+      "Victoria once operated on DST for the entire year during the 1956 Melbourne Olympics!",
+      "Melbourne has tried different DST schedules at least 5 times in the last century.",
+      "Victorians famously enjoy their extra evening daylight for outdoor dining in summer."
+    ],
+    "Australia/Hobart": [
+      "Tasmania was the first Australian state to introduce DST in 1967.",
+      "During summer, Hobart gets some of the latest sunsets in Australia thanks to DST and its southern location.",
+      "Tasmania sometimes experiences sunset after 9:30 PM in summer thanks to DST!"
+    ],
+    "Australia/Adelaide": [
+      "South Australia operates on a unique half-hour timezone offset (GMT+9:30).",
+      "Adelaide was the first Australian capital city to permanently adopt the half-hour time zone.",
+      "The SA-VIC border towns often have to deal with both time zones."
+    ],
+    "Australia/Brisbane": [
+      "Queensland once tried DST for three years (1989-1992) but voted to abandon it.",
+      "Brisbane residents claim that avoiding DST helps with air conditioning costs in summer.",
+      "The Gold Coast occasionally pushes to have its own time zone separate from the rest of Queensland!"
+    ],
+    "Australia/Darwin": [
+      "The Northern Territory has never used DST, partly because being so close to the equator means day length doesn't vary much.",
+      "Darwin's sunset time only varies by about 1 hour 20 minutes throughout the year.",
+      "NT once considered adopting DST just to be in sync with southern states for business hours."
+    ],
+    "Australia/Perth": [
+      "Western Australia has tried DST for four trial periods but voted 'no' in referendums each time.",
+      "Perth has the most extreme time difference from eastern states - 3 hours during summer!",
+      "WA businesses often start work early to overlap with eastern states' business hours."
+    ]
+  };
+  
+  // Get random fun fact for the selected timezone
+  const facts = funFacts[timezone];
+  const randomFact = facts[Math.floor(Math.random() * facts.length)];
+  
+  funFactDiv.innerHTML = `
+    <div>🧠 Time Trivia:</div>
+    <p>${randomFact}</p>
+    <button id="new-fact-btn" class="highlight">Show me another fact!</button>
+  `;
+  
+  // Add event listener for the new fact button
+  document.getElementById('new-fact-btn').addEventListener('click', function() {
+    const newFact = facts[Math.floor(Math.random() * facts.length)];
+    document.getElementById('fun-fact').innerHTML = `
+      <div>🧠 Time Trivia:</div>
+      <p>${newFact}</p>
+      <button id="new-fact-btn" class="highlight">Show me another fact!</button>
+    `;
+    document.getElementById('new-fact-btn').addEventListener('click', function() {
+      updateFunFact(timezone);
+    });
+  });
+}
+
+// Track visited timezones for "achievements"
+let visitedTimezones = {};
+
+function updateAchievements() {
+  const selectedTimezone = document.getElementById('timezone-select').value;
+  
+  // Mark this timezone as visited
+  visitedTimezones[selectedTimezone] = true;
+  
+  // Count visited timezones
+  const visitedCount = Object.keys(visitedTimezones).length;
+  
+  // If we've visited all 7 timezones, show an achievement
+  if (visitedCount === 7 && !document.getElementById('achievement')) {
+    const achievementDiv = document.createElement('div');
+    achievementDiv.id = 'achievement';
+    achievementDiv.className = 'fun-fact animation-pulse';
+    achievementDiv.innerHTML = `
+      <div>🏆 Achievement Unlocked: Time Traveler!</div>
+      <p>You've explored all Australian time zones! You're officially a Time Zone expert!</p>
+    `;
+    
+    // Insert after the fun fact
+    const funFactDiv = document.getElementById('fun-fact');
+    funFactDiv.parentNode.insertBefore(achievementDiv, funFactDiv.nextSibling);
+  }
+}
+
+// Initialize the page
+detectUserTimezone();
+updateInfo();
+updateFunFact(document.getElementById('timezone-select').value);
+
+// Update when timezone is changed
+document.getElementById('timezone-select').addEventListener('change', function() {
+  updateInfo();
+  updateFunFact(this.value);
+  updateAchievements();
+});
+
+// Update the times every minute
+setInterval(updateInfo, 60000);
+  </script>
+</body>
+</html>
