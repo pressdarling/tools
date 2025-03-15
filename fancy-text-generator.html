@@ -12,19 +12,19 @@
   body {
     font-family: Helvetica, Arial, sans-serif;
     margin: 0;
-    padding: 20px;
+    padding: 10px;
     background-color: #f5f5f5;
     color: #333;
     line-height: 1.5;
   }
   
   .container {
-    max-width: 800px;
+    max-width: 100%;
     margin: 0 auto;
     background-color: white;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    padding: 20px;
+    padding: 16px;
   }
   
   h1 {
@@ -33,15 +33,11 @@
     margin-top: 0;
     padding-bottom: 10px;
     border-bottom: 2px solid #eee;
+    font-size: 1.5rem;
   }
   
   .input-section, .output-section {
     margin-bottom: 20px;
-  }
-  
-  .instructions {
-    margin-bottom: 15px;
-    color: #555;
   }
   
   label {
@@ -53,42 +49,70 @@
   textarea, input {
     width: 100%;
     padding: 12px;
-    border: 1px solid #666;
+    border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 16px;
     font-family: Helvetica, Arial, sans-serif;
   }
   
-  textarea:focus, input:focus, button:focus {
-    outline: 3px solid #4a90e2;
+  textarea {
+    min-height: 100px;
   }
   
-  .output-container {
-    margin-top: 15px;
+  .transform-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .transform-btn {
+    padding: 10px 12px;
+    background-color: #4a6fa5;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-size: 16px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  .transform-btn:hover {
+    background-color: #3a5a8f;
+  }
+  
+  .transform-btn:focus {
+    outline: 3px solid #90caf9;
+  }
+  
+  .transform-btn.active {
+    background-color: #2c4870;
   }
   
   .output-box {
-    border: 1px solid #ccc;
+    border: 1px solid #eee;
     padding: 15px;
     border-radius: 4px;
     position: relative;
     background-color: #fafafa;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
   }
   
   .output-title {
     font-size: 16px;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     font-weight: bold;
-    color: #333;
+    color: #555;
   }
   
   .output-text {
     word-break: break-word;
-    margin-bottom: 45px;
+    margin-bottom: 40px;
     min-height: 20px;
-    background-color: white;
     padding: 10px;
+    background: #fff;
     border: 1px solid #eee;
     border-radius: 4px;
   }
@@ -101,12 +125,12 @@
     color: white;
     border: none;
     border-radius: 4px;
-    padding: 8px 15px;
+    padding: 8px 12px;
     font-size: 16px;
     cursor: pointer;
     transition: background-color 0.2s;
+    min-width: 44px;
     min-height: 44px;
-    min-width: 80px;
   }
   
   .copy-btn:hover {
@@ -114,36 +138,7 @@
   }
   
   .copy-btn:focus {
-    outline: 3px solid #4a90e2;
-  }
-  
-  .transform-options {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-  
-  .transform-btn {
-    padding: 10px 15px;
-    background-color: #4a6fa5;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    font-size: 16px;
-    min-height: 44px;
-    min-width: 44px;
-  }
-  
-  .transform-btn:hover {
-    background-color: #3a5a8f;
-  }
-  
-  .transform-btn.active {
-    background-color: #2c4870;
-    font-weight: bold;
+    outline: 3px solid #90caf9;
   }
   
   .sr-only {
@@ -160,41 +155,40 @@
   
   .status-message {
     position: fixed;
-    top: 20px;
-    right: 20px;
-    background-color: #4a6fa5;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
     color: white;
-    padding: 10px 15px;
+    padding: 10px 20px;
     border-radius: 4px;
-    z-index: 1000;
+    z-index: 100;
     opacity: 0;
-    transition: opacity 0.3s ease-in-out;
+    transition: opacity 0.3s;
   }
   
-  .status-message.visible {
+  .show-status {
     opacity: 1;
   }
   
-  @media (max-width: 600px) {
-    body {
-      padding: 10px;
-    }
-    
+  @media (min-width: 768px) {
     .container {
-      padding: 15px;
+      max-width: 800px;
+      padding: 20px;
     }
     
-    .transform-options {
-      flex-direction: column;
+    h1 {
+      font-size: 2rem;
     }
     
-    .transform-btn {
-      width: 100%;
-      text-align: left;
+    .output-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 15px;
     }
     
-    textarea {
-      min-height: 100px;
+    .output-box {
+      margin-bottom: 0;
     }
   }
   </style>
@@ -203,37 +197,33 @@
   <div class="container">
     <h1>Fancy Text Generator</h1>
     
-    <p class="instructions" id="instructions">
-      Transform your text into different styles like upside-down, tiny, wide, and more. Type your text below and see the transformations instantly.
-    </p>
-    
     <div class="input-section">
       <label for="input-text">Enter text to transform:</label>
       <textarea 
         id="input-text" 
         rows="3" 
         placeholder="Type or paste your text here..." 
-        aria-describedby="instructions"
-        autocomplete="off"
-        autocorrect="off"
+        aria-describedby="input-help"
       ></textarea>
+      <div id="input-help" class="sr-only">
+        Type text here to see it transformed into different styles
+      </div>
     </div>
     
-    <div class="transform-options" role="radiogroup" aria-label="Text transformation styles">
-      <button class="transform-btn active" data-type="all" role="radio" aria-checked="true">All Styles</button>
-      <button class="transform-btn" data-type="flip" role="radio" aria-checked="false">Upside Down</button>
-      <button class="transform-btn" data-type="tiny" role="radio" aria-checked="false">Tiny Text</button>
-      <button class="transform-btn" data-type="wide" role="radio" aria-checked="false">Wide Text</button>
-      <button class="transform-btn" data-type="bubble" role="radio" aria-checked="false">Bubble Text</button>
-      <button class="transform-btn" data-type="medieval" role="radio" aria-checked="false">Medieval</button>
-      <button class="transform-btn" data-type="bold" role="radio" aria-checked="false">Bold</button>
-      <button class="transform-btn" data-type="italic" role="radio" aria-checked="false">Italic</button>
-      <button class="transform-btn" data-type="strike" role="radio" aria-checked="false">Strikethrough</button>
+    <div class="transform-options" role="tablist" aria-label="Text transformation styles">
+      <button class="transform-btn active" data-type="all" role="tab" aria-selected="true">All Styles</button>
+      <button class="transform-btn" data-type="flip" role="tab" aria-selected="false">Upside Down</button>
+      <button class="transform-btn" data-type="tiny" role="tab" aria-selected="false">Tiny</button>
+      <button class="transform-btn" data-type="wide" role="tab" aria-selected="false">Wide</button>
+      <button class="transform-btn" data-type="bubble" role="tab" aria-selected="false">Bubble</button>
+      <button class="transform-btn" data-type="bold" role="tab" aria-selected="false">Bold</button>
+      <button class="transform-btn" data-type="italic" role="tab" aria-selected="false">Italic</button>
+      <button class="transform-btn" data-type="strike" role="tab" aria-selected="false">Strike</button>
     </div>
     
     <div class="output-section">
-      <h2>Generated Text Styles:</h2>
-      <div class="output-container" id="output-container" aria-live="polite">
+      <h2 id="output-heading">Generated Text Styles:</h2>
+      <div class="output-container" id="output-container" aria-live="polite" aria-labelledby="output-heading">
         <!-- Output boxes will be added here -->
       </div>
     </div>
@@ -242,31 +232,112 @@
   <div id="status-message" class="status-message" aria-live="assertive"></div>
 
 <script type="module">
-// Transform functions and character maps
-const transforms = {
-  flip: {
-    a: 'ɐ', b: 'q', c: 'ɔ', d: 'p', e: 'ǝ', f: 'ɟ', g: 'ƃ', h: 'ɥ', i: 'ᴉ', j: 'ɾ',
-    k: 'ʞ', l: 'l', m: 'ɯ', n: 'u', o: 'o', p: 'd', q: 'b', r: 'ɹ', s: 's', t: 'ʇ',
-    u: 'n', v: 'ʌ', w: 'ʍ', x: 'x', y: 'ʎ', z: 'z',
+// Flip table for upside-down text (from reference code)
+const flipTable = {
+  a: 'ɐ', b: 'q', c: 'ɔ', d: 'p', e: 'ǝ', f: 'ɟ', g: 'ƃ', h: 'ɥ', i: 'ᴉ', j: 'ɾ',
+  k: 'ʞ', l: 'l', m: 'ɯ', n: 'u', o: 'o', p: 'd', q: 'b', r: 'ɹ', s: 's', t: 'ʇ',
+  u: 'n', v: 'ʌ', w: 'ʍ', x: 'x', y: 'ʎ', z: 'z',
+  A: '∀', B: 'B', C: 'Ɔ', D: 'D', E: 'Ǝ', F: 'Ⅎ', G: 'פ', H: 'H', I: 'I', J: 'ſ',
+  K: 'K', L: '˥', M: 'W', N: 'N', O: 'O', P: 'Ԁ', Q: 'Q', R: 'ꓤ', S: 'S', T: '┴',
+  U: '∩', V: 'Λ', W: 'M', X: 'X', Y: '⅄', Z: 'Z',
+  0: '0', 1: 'Ɩ', 2: 'ᄅ', 3: 'Ɛ', 4: 'ㄣ', 5: 'ϛ', 6: '9', 7: 'ㄥ', 8: '8', 9: '6',
+  ',': '\'', '.': '˙', '?': '¿', '!': '¡', '"': '„', '\'': ',', '(': ')', ')': '(',
+  '[': ']', ']': '[', '{': '}', '}': '{', '<': '>', '>': '<', '&': '⅋', '_': '‾',
+};
+
+// Character maps for different text transformations
+const charMaps = {
+  tiny: {
+    a: 'ᵃ', b: 'ᵇ', c: 'ᶜ', d: 'ᵈ', e: 'ᵉ', f: 'ᶠ', g: 'ᵍ', h: 'ʰ', i: 'ⁱ', j: 'ʲ',
+    k: 'ᵏ', l: 'ˡ', m: 'ᵐ', n: 'ⁿ', o: 'ᵒ', p: 'ᵖ', q: 'ᵠ', r: 'ʳ', s: 'ˢ', t: 'ᵗ',
+    u: 'ᵘ', v: 'ᵛ', w: 'ʷ', x: 'ˣ', y: 'ʸ', z: 'ᶻ',
+    A: 'ᴬ', B: 'ᴮ', C: 'ᶜ', D: 'ᴰ', E: 'ᴱ', F: 'ᶠ', G: 'ᴳ', H: 'ᴴ', I: 'ᴵ', J: 'ᴶ',
+    K: 'ᴷ', L: 'ᴸ', M: 'ᴹ', N: 'ᴺ', O: 'ᴼ', P: 'ᴾ', Q: 'ᵠ', R: 'ᴿ', S: 'ˢ', T: 'ᵀ',
+    U: 'ᵁ', V: 'ⱽ', W: 'ᵂ', X: 'ˣ', Y: 'ʸ', Z: 'ᶻ',
+    0: '⁰', 1: '¹', 2: '²', 3: '³', 4: '⁴', 5: '⁵', 6: '⁶', 7: '⁷', 8: '⁸', 9: '⁹',
+  },
+  wide: {
+    a: 'ａ', b: 'ｂ', c: 'ｃ', d: 'ｄ', e: 'ｅ', f: 'ｆ', g: 'ｇ', h: 'ｈ', i: 'ｉ', j: 'ｊ',
+    k: 'ｋ', l: 'ｌ', m: 'ｍ', n: 'ｎ', o: 'ｏ', p: 'ｐ', q: 'ｑ', r: 'ｒ', s: 'ｓ', t: 'ｔ',
+    u: 'ｕ', v: 'ｖ', w: 'ｗ', x: 'ｘ', y: 'ｙ', z: 'ｚ',
+    A: 'Ａ', B: 'Ｂ', C: 'Ｃ', D: 'Ｄ', E: 'Ｅ', F: 'Ｆ', G: 'Ｇ', H: 'Ｈ', I: 'Ｉ', J: 'Ｊ',
+    K: 'Ｋ', L: 'Ｌ', M: 'Ｍ', N: 'Ｎ', O: 'Ｏ', P: 'Ｐ', Q: 'Ｑ', R: 'Ｒ', S: 'Ｓ', T: 'Ｔ',
+    U: 'Ｕ', V: 'Ｖ', W: 'Ｗ', X: 'Ｘ', Y: 'Ｙ', Z: 'Ｚ',
+    0: '０', 1: '１', 2: '２', 3: '３', 4: '４', 5: '５', 6: '６', 7: '７', 8: '８', 9: '９',
+    ' ': '　', '!': '！', '"': '＂', '#': '＃', '$': '＄', '%': '％', '&': '＆', "'": '＇',
+    '(': '（', ')': '）', '*': '＊', '+': '＋', ',': '，', '-': '－', '.': '．', '/': '／',
+    ':': '：', ';': '；', '<': '＜', '=': '＝', '>': '＞', '?': '？', '@': '＠',
+    '[': '［', '\\': '＼', ']': '］', '^': '＾', '_': '＿', '`': '｀', '{': '｛', '|': '｜',
+    '}': '｝', '~': '～',
+  },
+  bubble: {
+    a: 'ⓐ', b: 'ⓑ', c: 'ⓒ', d: 'ⓓ', e: 'ⓔ', f: 'ⓕ', g: 'ⓖ', h: 'ⓗ', i: 'ⓘ', j: 'ⓙ',
+    k: 'ⓚ', l: 'ⓛ', m: 'ⓜ', n: 'ⓝ', o: 'ⓞ', p: 'ⓟ', q: 'ⓠ', r: 'ⓡ', s: 'ⓢ', t: 'ⓣ',
+    u: 'ⓤ', v: 'ⓥ', w: 'ⓦ', x: 'ⓧ', y: 'ⓨ', z: 'ⓩ',
+    A: 'Ⓐ', B: 'Ⓑ', C: 'Ⓒ', D: 'Ⓓ', E: 'Ⓔ', F: 'Ⓕ', G: 'Ⓖ', H: 'Ⓗ', I: 'Ⓘ', J: 'Ⓙ',
+    K: 'Ⓚ', L: 'Ⓛ', M: 'Ⓜ', N: 'Ⓝ', O: 'Ⓞ', P: 'Ⓟ', Q: 'Ⓠ', R: 'Ⓡ', S: 'Ⓢ', T: 'Ⓣ',
+    U: 'Ⓤ', V: 'Ⓥ', W: 'Ⓦ', X: 'Ⓧ', Y: 'Ⓨ', Z: 'Ⓩ',
+    0: '⓪', 1: '①', 2: '②', 3: '③', 4: '④', 5: '⑤', 6: '⑥', 7: '⑦', 8: '⑧', 9: '⑨',
+  },
+  bold: {
+    a: '𝗮', b: '𝗯', c: '𝗰', d: '𝗱', e: '𝗲', f: '𝗳', g: '𝗴', h: '𝗵', i: '𝗶', j: '𝗷',
+    k: '𝗸', l: '𝗹', m: '𝗺', n: '𝗻', o: '𝗼', p: '𝗽', q: '𝗾', r: '𝗿', s: '𝘀', t: '𝘁',
+    u: '𝘂', v: '𝘃', w: '𝘄', x: '𝘅', y: '𝘆', z: '𝘇',
     A: '𝗔', B: '𝗕', C: '𝗖', D: '𝗗', E: '𝗘', F: '𝗙', G: '𝗚', H: '𝗛', I: '𝗜', J: '𝗝',
     K: '𝗞', L: '𝗟', M: '𝗠', N: '𝗡', O: '𝗢', P: '𝗣', Q: '𝗤', R: '𝗥', S: '𝗦', T: '𝗧',
     U: '𝗨', V: '𝗩', W: '𝗪', X: '𝗫', Y: '𝗬', Z: '𝗭',
     0: '𝟬', 1: '𝟭', 2: '𝟮', 3: '𝟯', 4: '𝟰', 5: '𝟱', 6: '𝟲', 7: '𝟳', 8: '𝟴', 9: '𝟵',
   },
-  
-// Function to transform text with a character map
-function transformWithMap(text, charMap) {
-  return text.split('').map(char => charMap[char] || char).join('');
-}
-
-// Function to transform text with a specific style
-function transformText(text, style) {
-  if (style === 'strike') {
-    return transforms[style](text);
-  } else {
-    return transformWithMap(text, transforms[style]);
+  italic: {
+    a: '𝘢', b: '𝘣', c: '𝘤', d: '𝘥', e: '𝘦', f: '𝘧', g: '𝘨', h: '𝘩', i: '𝘪', j: '𝘫',
+    k: '𝘬', l: '𝘭', m: '𝘮', n: '𝘯', o: '𝘰', p: '𝘱', q: '𝘲', r: '𝘳', s: '𝘴', t: '𝘵',
+    u: '𝘶', v: '𝘷', w: '𝘸', x: '𝘹', y: '𝘺', z: '𝘻',
+    A: '𝘈', B: '𝘉', C: '𝘊', D: '𝘋', E: '𝘌', F: '𝘍', G: '𝘎', H: '𝘏', I: '𝘐', J: '𝘑',
+    K: '𝘒', L: '𝘓', M: '𝘔', N: '𝘕', O: '𝘖', P: '𝘗', Q: '𝘘', R: '𝘙', S: '𝘚', T: '𝘛',
+    U: '𝘜', V: '𝘝', W: '𝘞', X: '𝘟', Y: '𝘠', Z: '𝘡',
   }
-}
+};
+
+// Transformation functions
+const transforms = {
+  // Upside down text
+  flip: function(text) {
+    let result = "";
+    // Loop through the text in reverse order
+    for (let i = text.length - 1; i >= 0; i--) {
+      const char = text[i];
+      // Use flipTable or the original character
+      result += (flipTable[char] || char);
+    }
+    return result;
+  },
+  
+  // Map characters using charMaps
+  tiny: function(text) {
+    return text.split('').map(char => charMaps.tiny[char] || char).join('');
+  },
+  
+  wide: function(text) {
+    return text.split('').map(char => charMaps.wide[char] || char).join('');
+  },
+  
+  bubble: function(text) {
+    return text.split('').map(char => charMaps.bubble[char] || char).join('');
+  },
+  
+  bold: function(text) {
+    return text.split('').map(char => charMaps.bold[char] || char).join('');
+  },
+  
+  italic: function(text) {
+    return text.split('').map(char => charMaps.italic[char] || char).join('');
+  },
+  
+  // Strike-through text
+  strike: function(text) {
+    return text.split('').map(char => char + '\u0336').join('');
+  }
+};
 
 // Transformation titles and descriptions
 const transformTitles = {
@@ -274,7 +345,6 @@ const transformTitles = {
   tiny: 'Tiny Text',
   wide: 'Wide Text',
   bubble: 'Bubble Text',
-  medieval: 'Medieval Text',
   bold: 'Bold Text',
   italic: 'Italic Text',
   strike: 'Strikethrough Text'
@@ -284,12 +354,24 @@ const transformTitles = {
 const inputEl = document.getElementById('input-text');
 const outputContainer = document.getElementById('output-container');
 const transformButtons = document.querySelectorAll('.transform-btn');
+const statusMessage = document.getElementById('status-message');
+
+// Show status message
+function showStatus(message, duration = 2000) {
+  statusMessage.textContent = message;
+  statusMessage.classList.add('show-status');
+  setTimeout(() => {
+    statusMessage.classList.remove('show-status');
+  }, duration);
+}
 
 // Function to create an output box
 function createOutputBox(title, text, transformType) {
   const outputBox = document.createElement('div');
   outputBox.className = 'output-box';
   outputBox.dataset.type = transformType;
+  outputBox.setAttribute('role', 'tabpanel');
+  outputBox.id = `panel-${transformType}`;
   
   const titleEl = document.createElement('div');
   titleEl.className = 'output-title';
@@ -298,17 +380,42 @@ function createOutputBox(title, text, transformType) {
   const textEl = document.createElement('div');
   textEl.className = 'output-text';
   textEl.textContent = text;
+  textEl.setAttribute('aria-label', `${title}: ${text}`);
   
   const copyBtn = document.createElement('button');
   copyBtn.className = 'copy-btn';
   copyBtn.textContent = 'Copy';
+  copyBtn.setAttribute('aria-label', `Copy ${title}`);
   copyBtn.onclick = function() {
+    // Use the clipboard API to copy text
     navigator.clipboard.writeText(text).then(() => {
-      const originalText = copyBtn.textContent;
+      // Show confirmation both visually and for screen readers
       copyBtn.textContent = 'Copied!';
+      showStatus(`${title} copied to clipboard`);
       setTimeout(() => {
-        copyBtn.textContent = originalText;
+        copyBtn.textContent = 'Copy';
       }, 1500);
+    }).catch(() => {
+      // Fallback for browsers that don't support clipboard API
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';  // Avoid scrolling to bottom
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      
+      try {
+        document.execCommand('copy');
+        copyBtn.textContent = 'Copied!';
+        showStatus(`${title} copied to clipboard`);
+        setTimeout(() => {
+          copyBtn.textContent = 'Copy';
+        }, 1500);
+      } catch (err) {
+        showStatus('Failed to copy text');
+      }
+      
+      document.body.removeChild(textarea);
     });
   };
   
@@ -336,14 +443,23 @@ function generateOutputs(inputText, activeType = 'all') {
   // Generate outputs based on active type
   if (activeType === 'all') {
     Object.keys(transforms).forEach(type => {
-      const transformedText = transformText(inputText, type);
-      const outputBox = createOutputBox(transformTitles[type], transformedText, type);
-      outputContainer.appendChild(outputBox);
+      try {
+        const transformedText = transforms[type](inputText);
+        const outputBox = createOutputBox(transformTitles[type], transformedText, type);
+        outputContainer.appendChild(outputBox);
+      } catch (error) {
+        console.error(`Error transforming with ${type}:`, error);
+      }
     });
   } else {
-    const transformedText = transformText(inputText, activeType);
-    const outputBox = createOutputBox(transformTitles[activeType], transformedText, activeType);
-    outputContainer.appendChild(outputBox);
+    try {
+      const transformedText = transforms[activeType](inputText);
+      const outputBox = createOutputBox(transformTitles[activeType], transformedText, activeType);
+      outputContainer.appendChild(outputBox);
+    } catch (error) {
+      console.error(`Error transforming with ${activeType}:`, error);
+      showStatus(`Error transforming text to ${transformTitles[activeType]}`);
+    }
   }
 }
 
@@ -358,163 +474,31 @@ inputEl.addEventListener('input', () => {
 transformButtons.forEach(button => {
   button.addEventListener('click', () => {
     // Update active button
-    transformButtons.forEach(btn => btn.classList.remove('active'));
+    transformButtons.forEach(btn => {
+      btn.classList.remove('active');
+      btn.setAttribute('aria-selected', 'false');
+    });
     button.classList.add('active');
+    button.setAttribute('aria-selected', 'true');
     
     // Generate outputs with selected type
     generateOutputs(inputEl.value, button.dataset.type);
   });
+  
+  // Make buttons accessible with keyboard
+  button.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      button.click();
+    }
+  });
 });
 
-// Initial output generation with placeholder
-inputEl.value = "Type your text here";
-generateOutputs(inputEl.value);
-
-// Clear placeholder on focus
-inputEl.addEventListener('focus', function() {
-  if (this.value === "Type your text here") {
-    this.value = '';
-  }
+// Initialize with placeholder text
+window.addEventListener('DOMContentLoaded', () => {
+  inputEl.value = "Hello world!";
+  generateOutputs(inputEl.value);
 });
-
-// Restore placeholder if empty on blur
-inputEl.addEventListener('blur', function() {
-  if (this.value.trim() === '') {
-    this.value = "Type your text here";
-    generateOutputs(this.value);
-  }
-});
-  strike: {
-    a: 'a̶', b: 'b̶', c: 'c̶', d: 'd̶', e: 'e̶', f: 'f̶', g: 'g̶', h: 'h̶', i: 'i̶', j: 'j̶',
-    k: 'k̶', l: 'l̶', m: 'm̶', n: 'n̶', o: 'o̶', p: 'p̶', q: 'q̶', r: 'r̶', s: 's̶', t: 't̶',
-    u: 'u̶', v: 'v̶', w: 'w̶', x: 'x̶', y: 'y̶', z: 'z̶',
-    A: 'A̶', B: 'B̶', C: 'C̶', D: 'D̶', E: 'E̶', F: 'F̶', G: 'G̶', H: 'H̶', I: 'I̶', J: 'J̶',
-    K: 'K̶', L: 'L̶', M: 'M̶', N: 'N̶', O: 'O̶', P: 'P̶', Q: 'Q̶', R: 'R̶', S: 'S̶', T: 'T̶',
-    U: 'U̶', V: 'V̶', W: 'W̶', X: 'X̶', Y: 'Y̶', Z: 'Z̶',
-    0: '0̶', 1: '1̶', 2: '2̶', 3: '3̶', 4: '4̶', 5: '5̶', 6: '6̶', 7: '7̶', 8: '8̶', 9: '9̶',
-    ' ': ' ', '!': '!̶', '"': '"̶', '#': '#̶', '
-  italic: {
-    a: '𝘢', b: '𝘣', c: '𝘤', d: '𝘥', e: '𝘦', f: '𝘧', g: '𝘨', h: '𝘩', i: '𝘪', j: '𝘫',
-    k: '𝘬', l: '𝘭', m: '𝘮', n: '𝘯', o: '𝘰', p: '𝘱', q: '𝘲', r: '𝘳', s: '𝘴', t: '𝘵',
-    u: '𝘶', v: '𝘷', w: '𝘸', x: '𝘹', y: '𝘺', z: '𝘻',
-    A: '𝘈', B: '𝘉', C: '𝘊', D: '𝘋', E: '𝘌', F: '𝘍', G: '𝘎', H: '𝘏', I: '𝘐', J: '𝘑',
-    K: '𝘒', L: '𝘓', M: '𝘔', N: '𝘕', O: '𝘖', P: '𝘗', Q: '𝘘', R: '𝘙', S: '𝘚', T: '𝘛',
-    U: '𝘜', V: '𝘝', W: '𝘞', X: '𝘟', Y: '𝘠', Z: '𝘡',
-  },
-}∀', B: 'B', C: 'Ɔ', D: 'D', E: 'Ǝ', F: 'Ⅎ', G: 'פ', H: 'H', I: 'I', J: 'ſ',
-    K: 'K', L: '˥', M: 'W', N: 'N', O: 'O', P: 'Ԁ', Q: 'Q', R: 'ꓤ', S: 'S', T: '┴',
-    U: '∩', V: 'Λ', W: 'M', X: 'X', Y: '⅄', Z: 'Z',
-    0: '0', 1: 'Ɩ', 2: 'ᄅ', 3: 'Ɛ', 4: 'ㄣ', 5: 'ϛ', 6: '9', 7: 'ㄥ', 8: '8', 9: '6',
-    ',': '\'', '.': '˙', '?': '¿', '!': '¡', '"': '„', '\'': ',', '(': ')', ')': '(',
-    '[': ']', ']': '[', '{': '}', '}': '{', '<': '>', '>': '<', '&': '⅋', '_': '‾',
-  },
-  tiny: {
-    a: 'ᵃ', b: 'ᵇ', c: 'ᶜ', d: 'ᵈ', e: 'ᵉ', f: 'ᶠ', g: 'ᵍ', h: 'ʰ', i: 'ⁱ', j: 'ʲ',
-    k: 'ᵏ', l: 'ˡ', m: 'ᵐ', n: 'ⁿ', o: 'ᵒ', p: 'ᵖ', q: 'ᵠ', r: 'ʳ', s: 'ˢ', t: 'ᵗ',
-    u: 'ᵘ', v: 'ᵛ', w: 'ʷ', x: 'ˣ', y: 'ʸ', z: 'ᶻ',
-    A: 'ᴬ', B: 'ᴮ', C: 'ᶜ', D: 'ᴰ', E: 'ᴱ', F: 'ᶠ', G: 'ᴳ', H: 'ᴴ', I: 'ᴵ', J: 'ᴶ',
-    K: 'ᴷ', L: 'ᴸ', M: 'ᴹ', N: 'ᴺ', O: 'ᴼ', P: 'ᴾ', Q: 'ᵠ', R: 'ᴿ', S: 'ˢ', T: 'ᵀ',
-    U: 'ᵁ', V: 'ⱽ', W: 'ᵂ', X: 'ˣ', Y: 'ʸ', Z: 'ᶻ',
-    0: '⁰', 1: '¹', 2: '²', 3: '³', 4: '⁴', 5: '⁵', 6: '⁶', 7: '⁷', 8: '⁸', 9: '⁹',
-  },
-  wide: {
-    a: 'ａ', b: 'ｂ', c: 'ｃ', d: 'ｄ', e: 'ｅ', f: 'ｆ', g: 'ｇ', h: 'ｈ', i: 'ｉ', j: 'ｊ',
-    k: 'ｋ', l: 'ｌ', m: 'ｍ', n: 'ｎ', o: 'ｏ', p: 'ｐ', q: 'ｑ', r: 'ｒ', s: 'ｓ', t: 'ｔ',
-    u: 'ｕ', v: 'ｖ', w: 'ｗ', x: 'ｘ', y: 'ｙ', z: 'ｚ',
-    A: 'Ａ', B: 'Ｂ', C: 'Ｃ', D: 'Ｄ', E: 'Ｅ', F: 'Ｆ', G: 'Ｇ', H: 'Ｈ', I: 'Ｉ', J: 'Ｊ',
-    K: 'Ｋ', L: 'Ｌ', M: 'Ｍ', N: 'Ｎ', O: 'Ｏ', P: 'Ｐ', Q: 'Ｑ', R: 'Ｒ', S: 'Ｓ', T: 'Ｔ',
-    U: 'Ｕ', V: 'Ｖ', W: 'Ｗ', X: 'Ｘ', Y: 'Ｙ', Z: 'Ｚ',
-    0: '０', 1: '１', 2: '２', 3: '３', 4: '４', 5: '５', 6: '６', 7: '７', 8: '８', 9: '９',
-    ' ': '　', '!': '！', '"': '＂', '#': '＃', '$': '＄', '%': '％', '&': '＆', "'": '＇',
-    '(': '（', ')': '）', '*': '＊', '+': '＋', ',': '，', '-': '－', '.': '．', '/': '／',
-    ':': '：', ';': '；', '<': '＜', '=': '＝', '>': '＞', '?': '？', '@': '＠',
-    '[': '［', '\\': '＼', ']': '］', '^': '＾', '_': '＿', '`': '｀', '{': '｛', '|': '｜',
-    '}': '｝', '~': '～',
-  },
-  bubble: {
-    a: 'ⓐ', b: 'ⓑ', c: 'ⓒ', d: 'ⓓ', e: 'ⓔ', f: 'ⓕ', g: 'ⓖ', h: 'ⓗ', i: 'ⓘ', j: 'ⓙ',
-    k: 'ⓚ', l: 'ⓛ', m: 'ⓜ', n: 'ⓝ', o: 'ⓞ', p: 'ⓟ', q: 'ⓠ', r: 'ⓡ', s: 'ⓢ', t: 'ⓣ',
-    u: 'ⓤ', v: 'ⓥ', w: 'ⓦ', x: 'ⓧ', y: 'ⓨ', z: 'ⓩ',
-    A: 'Ⓐ', B: 'Ⓑ', C: 'Ⓒ', D: 'Ⓓ', E: 'Ⓔ', F: 'Ⓕ', G: 'Ⓖ', H: 'Ⓗ', I: 'Ⓘ', J: 'Ⓙ',
-    K: 'Ⓚ', L: 'Ⓛ', M: 'Ⓜ', N: 'Ⓝ', O: 'Ⓞ', P: 'Ⓟ', Q: 'Ⓠ', R: 'Ⓡ', S: 'Ⓢ', T: 'Ⓣ',
-    U: 'Ⓤ', V: 'Ⓥ', W: 'Ⓦ', X: 'Ⓧ', Y: 'Ⓨ', Z: 'Ⓩ',
-    0: '⓪', 1: '①', 2: '②', 3: '③', 4: '④', 5: '⑤', 6: '⑥', 7: '⑦', 8: '⑧', 9: '⑨',
-  },
-  medieval: {
-    a: '𝔞', b: '𝔟', c: '𝔠', d: '𝔡', e: '𝔢', f: '𝔣', g: '𝔤', h: '𝔥', i: '𝔦', j: '𝔧',
-    k: '𝔨', l: '𝔩', m: '𝔪', n: '𝔫', o: '𝔬', p: '𝔭', q: '𝔮', r: '𝔯', s: '𝔰', t: '𝔱',
-    u: '𝔲', v: '𝔳', w: '𝔴', x: '𝔵', y: '𝔶', z: '𝔷',
-    A: '𝔄', B: '𝔅', C: 'ℭ', D: '𝔇', E: '𝔈', F: '𝔉', G: '𝔊', H: 'ℌ', I: 'ℑ', J: '𝔍',
-    K: '𝔎', L: '𝔏', M: '𝔐', N: '𝔑', O: '𝔒', P: '𝔓', Q: '𝔔', R: 'ℜ', S: '𝔖', T: '𝔗',
-    U: '𝔘', V: '𝔙', W: '𝔚', X: '𝔛', Y: '𝔜', Z: 'ℨ',
-  },
-  bold: {
-    a: '𝗮', b: '𝗯', c: '𝗰', d: '𝗱', e: '𝗲', f: '𝗳', g: '𝗴', h: '𝗵', i: '𝗶', j: '𝗷',
-    k: '𝗸', l: '𝗹', m: '𝗺', n: '𝗻', o: '𝗼', p: '𝗽', q: '𝗾', r: '𝗿', s: '𝘀', t: '𝘁',
-    u: '𝘂', v: '𝘃', w: '𝘄', x: '𝘅', y: '𝘆', z: '𝘇',
-    A: ': '$̶', '%': '%̶', '&': '&̶', "'": "'̶",
-    '(': '(̶', ')': ')̶', '*': '*̶', '+': '+̶', ',': ',̶', '-': '-̶', '.': '.̶', '/': '/̶',
-    ':': ':̶', ';': ';̶', '<': '<̶', '=': '=̶', '>': '>̶', '?': '?̶', '@': '@̶',
-    '[': '[̶', '\\': '\\̶', ']': ']̶', '^': '^̶', '_': '_̶', '`': '`̶', '{': '{̶', '|': '|̶',
-    '}': '}̶', '~': '~̶',
-  },
-  italic: {
-    a: '𝘢', b: '𝘣', c: '𝘤', d: '𝘥', e: '𝘦', f: '𝘧', g: '𝘨', h: '𝘩', i: '𝘪', j: '𝘫',
-    k: '𝘬', l: '𝘭', m: '𝘮', n: '𝘯', o: '𝘰', p: '𝘱', q: '𝘲', r: '𝘳', s: '𝘴', t: '𝘵',
-    u: '𝘶', v: '𝘷', w: '𝘸', x: '𝘹', y: '𝘺', z: '𝘻',
-    A: '𝘈', B: '𝘉', C: '𝘊', D: '𝘋', E: '𝘌', F: '𝘍', G: '𝘎', H: '𝘏', I: '𝘐', J: '𝘑',
-    K: '𝘒', L: '𝘓', M: '𝘔', N: '𝘕', O: '𝘖', P: '𝘗', Q: '𝘘', R: '𝘙', S: '𝘚', T: '𝘛',
-    U: '𝘜', V: '𝘝', W: '𝘞', X: '𝘟', Y: '𝘠', Z: '𝘡',
-  },
-}∀', B: 'B', C: 'Ɔ', D: 'D', E: 'Ǝ', F: 'Ⅎ', G: 'פ', H: 'H', I: 'I', J: 'ſ',
-    K: 'K', L: '˥', M: 'W', N: 'N', O: 'O', P: 'Ԁ', Q: 'Q', R: 'ꓤ', S: 'S', T: '┴',
-    U: '∩', V: 'Λ', W: 'M', X: 'X', Y: '⅄', Z: 'Z',
-    0: '0', 1: 'Ɩ', 2: 'ᄅ', 3: 'Ɛ', 4: 'ㄣ', 5: 'ϛ', 6: '9', 7: 'ㄥ', 8: '8', 9: '6',
-    ',': '\'', '.': '˙', '?': '¿', '!': '¡', '"': '„', '\'': ',', '(': ')', ')': '(',
-    '[': ']', ']': '[', '{': '}', '}': '{', '<': '>', '>': '<', '&': '⅋', '_': '‾',
-  },
-  tiny: {
-    a: 'ᵃ', b: 'ᵇ', c: 'ᶜ', d: 'ᵈ', e: 'ᵉ', f: 'ᶠ', g: 'ᵍ', h: 'ʰ', i: 'ⁱ', j: 'ʲ',
-    k: 'ᵏ', l: 'ˡ', m: 'ᵐ', n: 'ⁿ', o: 'ᵒ', p: 'ᵖ', q: 'ᵠ', r: 'ʳ', s: 'ˢ', t: 'ᵗ',
-    u: 'ᵘ', v: 'ᵛ', w: 'ʷ', x: 'ˣ', y: 'ʸ', z: 'ᶻ',
-    A: 'ᴬ', B: 'ᴮ', C: 'ᶜ', D: 'ᴰ', E: 'ᴱ', F: 'ᶠ', G: 'ᴳ', H: 'ᴴ', I: 'ᴵ', J: 'ᴶ',
-    K: 'ᴷ', L: 'ᴸ', M: 'ᴹ', N: 'ᴺ', O: 'ᴼ', P: 'ᴾ', Q: 'ᵠ', R: 'ᴿ', S: 'ˢ', T: 'ᵀ',
-    U: 'ᵁ', V: 'ⱽ', W: 'ᵂ', X: 'ˣ', Y: 'ʸ', Z: 'ᶻ',
-    0: '⁰', 1: '¹', 2: '²', 3: '³', 4: '⁴', 5: '⁵', 6: '⁶', 7: '⁷', 8: '⁸', 9: '⁹',
-  },
-  wide: {
-    a: 'ａ', b: 'ｂ', c: 'ｃ', d: 'ｄ', e: 'ｅ', f: 'ｆ', g: 'ｇ', h: 'ｈ', i: 'ｉ', j: 'ｊ',
-    k: 'ｋ', l: 'ｌ', m: 'ｍ', n: 'ｎ', o: 'ｏ', p: 'ｐ', q: 'ｑ', r: 'ｒ', s: 'ｓ', t: 'ｔ',
-    u: 'ｕ', v: 'ｖ', w: 'ｗ', x: 'ｘ', y: 'ｙ', z: 'ｚ',
-    A: 'Ａ', B: 'Ｂ', C: 'Ｃ', D: 'Ｄ', E: 'Ｅ', F: 'Ｆ', G: 'Ｇ', H: 'Ｈ', I: 'Ｉ', J: 'Ｊ',
-    K: 'Ｋ', L: 'Ｌ', M: 'Ｍ', N: 'Ｎ', O: 'Ｏ', P: 'Ｐ', Q: 'Ｑ', R: 'Ｒ', S: 'Ｓ', T: 'Ｔ',
-    U: 'Ｕ', V: 'Ｖ', W: 'Ｗ', X: 'Ｘ', Y: 'Ｙ', Z: 'Ｚ',
-    0: '０', 1: '１', 2: '２', 3: '３', 4: '４', 5: '５', 6: '６', 7: '７', 8: '８', 9: '９',
-    ' ': '　', '!': '！', '"': '＂', '#': '＃', '$': '＄', '%': '％', '&': '＆', "'": '＇',
-    '(': '（', ')': '）', '*': '＊', '+': '＋', ',': '，', '-': '－', '.': '．', '/': '／',
-    ':': '：', ';': '；', '<': '＜', '=': '＝', '>': '＞', '?': '？', '@': '＠',
-    '[': '［', '\\': '＼', ']': '］', '^': '＾', '_': '＿', '`': '｀', '{': '｛', '|': '｜',
-    '}': '｝', '~': '～',
-  },
-  bubble: {
-    a: 'ⓐ', b: 'ⓑ', c: 'ⓒ', d: 'ⓓ', e: 'ⓔ', f: 'ⓕ', g: 'ⓖ', h: 'ⓗ', i: 'ⓘ', j: 'ⓙ',
-    k: 'ⓚ', l: 'ⓛ', m: 'ⓜ', n: 'ⓝ', o: 'ⓞ', p: 'ⓟ', q: 'ⓠ', r: 'ⓡ', s: 'ⓢ', t: 'ⓣ',
-    u: 'ⓤ', v: 'ⓥ', w: 'ⓦ', x: 'ⓧ', y: 'ⓨ', z: 'ⓩ',
-    A: 'Ⓐ', B: 'Ⓑ', C: 'Ⓒ', D: 'Ⓓ', E: 'Ⓔ', F: 'Ⓕ', G: 'Ⓖ', H: 'Ⓗ', I: 'Ⓘ', J: 'Ⓙ',
-    K: 'Ⓚ', L: 'Ⓛ', M: 'Ⓜ', N: 'Ⓝ', O: 'Ⓞ', P: 'Ⓟ', Q: 'Ⓠ', R: 'Ⓡ', S: 'Ⓢ', T: 'Ⓣ',
-    U: 'Ⓤ', V: 'Ⓥ', W: 'Ⓦ', X: 'Ⓧ', Y: 'Ⓨ', Z: 'Ⓩ',
-    0: '⓪', 1: '①', 2: '②', 3: '③', 4: '④', 5: '⑤', 6: '⑥', 7: '⑦', 8: '⑧', 9: '⑨',
-  },
-  medieval: {
-    a: '𝔞', b: '𝔟', c: '𝔠', d: '𝔡', e: '𝔢', f: '𝔣', g: '𝔤', h: '𝔥', i: '𝔦', j: '𝔧',
-    k: '𝔨', l: '𝔩', m: '𝔪', n: '𝔫', o: '𝔬', p: '𝔭', q: '𝔮', r: '𝔯', s: '𝔰', t: '𝔱',
-    u: '𝔲', v: '𝔳', w: '𝔴', x: '𝔵', y: '𝔶', z: '𝔷',
-    A: '𝔄', B: '𝔅', C: 'ℭ', D: '𝔇', E: '𝔈', F: '𝔉', G: '𝔊', H: 'ℌ', I: 'ℑ', J: '𝔍',
-    K: '𝔎', L: '𝔏', M: '𝔐', N: '𝔑', O: '𝔒', P: '𝔓', Q: '𝔔', R: 'ℜ', S: '𝔖', T: '𝔗',
-    U: '𝔘', V: '𝔙', W: '𝔚', X: '𝔛', Y: '𝔜', Z: 'ℨ',
-  },
-  bold: {
-    a: '𝗮', b: '𝗯', c: '𝗰', d: '𝗱', e: '𝗲', f: '𝗳', g: '𝗴', h: '𝗵', i: '𝗶', j: '𝗷',
-    k: '𝗸', l: '𝗹', m: '𝗺', n: '𝗻', o: '𝗼', p: '𝗽', q: '𝗾', r: '𝗿', s: '𝘀', t: '𝘁',
-    u: '𝘂', v: '𝘃', w: '𝘄', x: '𝘅', y: '𝘆', z: '𝘇',
-    A: '
+</script>
+</body>
+</html>
