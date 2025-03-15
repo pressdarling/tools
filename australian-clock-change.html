@@ -85,7 +85,7 @@
       color: #c53030;
     }
     
-    .fun-fact {
+    .fun-fact, .achievement {
       background: #fefcbf;
       border: 2px dashed #d69e2e;
       border-radius: 8px;
@@ -93,6 +93,10 @@
       margin: 1rem 0;
       font-size: 1.2rem;
       line-height: 1.6;
+      min-height: 180px; /* Prevent layout jumps */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
     
     .animation-pulse {
@@ -144,18 +148,39 @@
     }
     
     button {
-      background-color: #4299e1;
+      background-color: #2563eb; /* Darker blue for better contrast */
       color: white;
       border: none;
-      padding: 0.5em 1em;
+      padding: 0.8em 1.2em;
       border-radius: 4px;
       font-size: 16px;
+      font-weight: bold;
       cursor: pointer;
-      transition: background-color 0.2s ease;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
     
     button:hover {
-      background-color: #3182ce;
+      background-color: #1d4ed8;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+    }
+    
+    button:focus {
+      outline: 3px solid #93c5fd;
+      outline-offset: 2px;
+    }
+    
+    /* Added for assistive technology */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border-width: 0;
     }
     
     #timezone-select {
@@ -193,11 +218,16 @@
 </head>
 <body>
   <div class="container">
-    <h1><span style="display: inline-block; animation: clockspin 3s ease-in-out infinite;">🕒</span> Australian Clock Change 🦘</h1>
+    <h1>
+      <span style="display: inline-block; animation: clockspin 3s ease-in-out infinite;" aria-hidden="true">🕒</span> 
+      Australian Clock Change 
+      <span aria-hidden="true">🦘</span>
+    </h1>
     <div class="subtitle">G'day! Find your local time change info, mate</div>
     
     <div class="timezone-selector">
-      <select id="timezone-select">
+      <label for="timezone-select" class="sr-only">Select your timezone</label>
+      <select id="timezone-select" aria-label="Select your timezone">
         <option value="Australia/Sydney">Sydney/NSW/ACT (AEST/AEDT)</option>
         <option value="Australia/Melbourne">Melbourne/Victoria (AEST/AEDT)</option>
         <option value="Australia/Hobart">Tasmania (AEST/AEDT)</option>
@@ -208,12 +238,13 @@
       </select>
     </div>
     
-    <div id="timezone-info"></div>
-    <div id="past-change"></div>
-    <div id="future-change"></div>
-    <div id="body-clock"></div>
-    <div id="current-dst"></div>
-    <div id="fun-fact" class="fun-fact"></div>
+    <!-- Fixed height containers to prevent layout jumps -->
+    <div id="timezone-info" class="info-box" style="min-height: 100px;"></div>
+    <div id="past-change" class="info-box" style="min-height: 140px;"></div>
+    <div id="future-change" class="info-box" style="min-height: 160px;"></div>
+    <div id="body-clock" style="min-height: 120px;"></div>
+    <div id="current-dst" class="info-box" style="min-height: 120px;"></div>
+    <div id="fun-fact" class="fun-fact" aria-live="polite"></div>
   </div>
 
   <script type="module">
@@ -343,34 +374,48 @@ function getDaysSince(date) {
 function updateBodyClockInfo(pastChange) {
   const bodyClockDiv = document.getElementById('body-clock');
   
+  // Always show some body clock info - either recent changes or general info
+  const now = new Date();
+  
   if (!pastChange) {
-    bodyClockDiv.innerHTML = '';
+    // For regions without DST, show educational content
+    bodyClockDiv.className = 'body-clock';
+    bodyClockDiv.innerHTML = `
+      <p><span class="emoji-bounce" aria-hidden="true">⏰</span> <span class="highlight">Body Clock Science:</span></p>
+      <p>Your body has an internal clock called the circadian rhythm that regulates sleep-wake cycles.</p>
+      <p>While your region doesn't change clocks, when you travel to areas with different time zones, your body 
+      needs about one day to adjust for each hour of time difference.</p>
+    `;
     return;
   }
   
   const daysSince = getDaysSince(pastChange.date);
+  const petClock = new Date(now);
   
-  if (daysSince <= 7) {  // Show message for a week after the change
-    const now = new Date();
-    const petClock = new Date(now);
-    
-    if (pastChange.isSpringForward) {
-      petClock.setHours(now.getHours() - 1);
-    } else {
-      petClock.setHours(now.getHours() + 1);
-    }
-    
-    bodyClockDiv.className = 'body-clock';
+  if (pastChange.isSpringForward) {
+    petClock.setHours(now.getHours() - 1);
+  } else {
+    petClock.setHours(now.getHours() + 1);
+  }
+  
+  bodyClockDiv.className = 'body-clock';
+  
+  if (daysSince <= 7) {  // Show recent change message
     bodyClockDiv.innerHTML = `
-      <p><span class="emoji-bounce">🐨</span> <span class="emoji-bounce">🐕</span> <span class="emoji-bounce">😴</span> Confused Creatures!</p>
+      <p><span class="emoji-bounce" aria-hidden="true">🐨</span> <span class="emoji-bounce" aria-hidden="true">🐕</span> <span class="emoji-bounce" aria-hidden="true">😴</span> <span class="highlight">Adjusting Body Clocks:</span></p>
       <p>Your clock says it's <span class="highlight">${formatTime(now)}</span>, but your 
-      pet thinks it's <span class="highlight">${formatTime(petClock)}</span>!</p>
-      <p>Australian animals and pets have reliable internal body clocks (even kangaroos!) 
-      and don't understand our human time changes.</p>
-      <p>If your pet seems hungry or confused at odd times, that's why! They'll adjust in a few days.</p>
+      pet's internal clock thinks it's <span class="highlight">${formatTime(petClock)}</span>!</p>
+      <p>Animals have reliable internal body clocks and don't understand time changes.</p>
+      <p>Humans are affected too: time changes can temporarily impact sleep quality, alertness, and even appetite patterns.</p>
     `;
   } else {
-    bodyClockDiv.innerHTML = '';
+    // Show educational content about circadian rhythms
+    bodyClockDiv.innerHTML = `
+      <p><span aria-hidden="true">🔬</span> <span class="highlight">Circadian Science:</span></p>
+      <p>Your body clock (circadian rhythm) is regulated by light exposure and consistent routines.</p>
+      <p>Even small time changes can temporarily affect sleep, alertness, and hunger patterns.</p>
+      <p>Early morning sunlight exposure helps reset your body clock after time changes.</p>
+    `;
   }
 }
 
@@ -391,16 +436,20 @@ function updateInfo() {
   if (!tzInfo.hasDst) {
     document.getElementById('past-change').className = 'info-box';
     document.getElementById('past-change').innerHTML = `
-      <div>No clock changes here!</div>
-      <p>This region doesn't use Daylight Saving Time, so you can sleep easy all year round. 😴</p>
-      <p>While other Aussies are adjusting their clocks, you get to keep the same routine!</p>
+      <div>No Clock Changes Here!</div>
+      <p>This region maintains a consistent time standard all year-round without Daylight Saving Time adjustments.</p>
+      <p>While other Australians adjust their schedules twice yearly, your region maintains stable time patterns.</p>
     `;
     
     document.getElementById('future-change').className = 'info-box';
     document.getElementById('future-change').innerHTML = `
-      <div class="animation-pulse">Congratulations! 🎉</div>
-      <p>Your region stays on ${tzInfo.shortName} all year.</p>
-      <p>No need to remember to change any clocks - ever!</p>
+      <div class="animation-pulse"><span aria-hidden="true">🎓</span> Understanding Standard Time</div>
+      <p>Your region stays on ${tzInfo.shortName} throughout the year. This provides consistency for:</p>
+      <ul style="text-align: left; margin-top: 0.5rem;">
+        <li>Sleep patterns and circadian rhythms</li>
+        <li>Agricultural and outdoor work schedules</li>
+        <li>International business communications</li>
+      </ul>
     `;
     
     document.getElementById('body-clock').innerHTML = '';
@@ -467,77 +516,174 @@ function updateInfo() {
   }
   
   currentDstDiv.innerHTML = `
-    <div>Current status:</div>
+    <div>Current Status:</div>
     <p>It is currently <span class="highlight">${isDst ? 'Daylight Saving Time (' + daylightAbbr + ')' : 'Standard Time (' + standardAbbr + ')'}</span>.</p>
     <p>${isDst ? 
-      '☀️ Enjoying longer summer evenings!' : 
-      '🌙 Standard time - mornings are brighter!'}</p>
+      '<span aria-hidden="true">☀️</span> DST moves daylight from morning to evening, creating longer summer evenings.' : 
+      '<span aria-hidden="true">🌙</span> Standard time aligns solar noon more closely with clock noon, giving brighter mornings.'}</p>
+    <p>Your timezone is currently UTC${new Date().toLocaleString('en-US', {timeZoneName: 'longOffset', timeZone: selectedTimezone}).split('UTC')[1]}.</p>
   `;
 }
 
-// Fun facts about Australian time zones
+// Trivia facts and practical tips about time changes
+// We track shown facts to avoid repetition
+let shownFactsTracking = {};
+
 function updateFunFact(timezone) {
   const funFactDiv = document.getElementById('fun-fact');
   
-  const funFacts = {
+  // Initialize tracking for this timezone if it doesn't exist
+  if (!shownFactsTracking[timezone]) {
+    shownFactsTracking[timezone] = {
+      facts: [],
+      tips: [],
+      global: []
+    };
+  }
+  
+  // Facts specific to Australian regions
+  const regionalFacts = {
     "Australia/Sydney": [
       "Sydney was one of the first major cities in the world to implement Daylight Saving Time in 1917.",
       "NSW has changed its DST start and end dates more than 10 times since it was introduced.",
-      "The Sydney Opera House clock requires special attention during time changes."
+      "The Sydney Opera House clock requires special attention during time changes.",
+      "Sydney's DST was briefly abandoned during World War II to save fuel, then reinstated in 1971."
     ],
     "Australia/Melbourne": [
       "Victoria once operated on DST for the entire year during the 1956 Melbourne Olympics!",
       "Melbourne has tried different DST schedules at least 5 times in the last century.",
-      "Victorians famously enjoy their extra evening daylight for outdoor dining in summer."
+      "Victorians famously enjoy their extra evening daylight for outdoor dining in summer.",
+      "Melbourne's Federation Square has a complex clock system that adjusts automatically for DST."
     ],
     "Australia/Hobart": [
       "Tasmania was the first Australian state to introduce DST in 1967.",
       "During summer, Hobart gets some of the latest sunsets in Australia thanks to DST and its southern location.",
-      "Tasmania sometimes experiences sunset after 9:30 PM in summer thanks to DST!"
+      "Tasmania sometimes experiences sunset after 9:30 PM in summer thanks to DST!",
+      "Tasmania pushed for DST primarily to align business hours with mainland states."
     ],
     "Australia/Adelaide": [
       "South Australia operates on a unique half-hour timezone offset (GMT+9:30).",
       "Adelaide was the first Australian capital city to permanently adopt the half-hour time zone.",
-      "The SA-VIC border towns often have to deal with both time zones."
+      "The SA-VIC border towns often have to deal with both time zones.",
+      "The half-hour offset helps Adelaide stay closer to both eastern and western time zones."
     ],
     "Australia/Brisbane": [
       "Queensland once tried DST for three years (1989-1992) but voted to abandon it.",
       "Brisbane residents claim that avoiding DST helps with air conditioning costs in summer.",
-      "The Gold Coast occasionally pushes to have its own time zone separate from the rest of Queensland!"
+      "The Gold Coast occasionally pushes to have its own time zone separate from the rest of Queensland!",
+      "In summer, TV programs are broadcast an hour earlier in Queensland than in NSW."
     ],
     "Australia/Darwin": [
       "The Northern Territory has never used DST, partly because being so close to the equator means day length doesn't vary much.",
       "Darwin's sunset time only varies by about 1 hour 20 minutes throughout the year.",
-      "NT once considered adopting DST just to be in sync with southern states for business hours."
+      "NT once considered adopting DST just to be in sync with southern states for business hours.",
+      "Darwin's proximity to Asia makes standard time beneficial for international business."
     ],
     "Australia/Perth": [
       "Western Australia has tried DST for four trial periods but voted 'no' in referendums each time.",
       "Perth has the most extreme time difference from eastern states - 3 hours during summer!",
-      "WA businesses often start work early to overlap with eastern states' business hours."
+      "WA businesses often start work early to overlap with eastern states' business hours.",
+      "The mining industry has been a strong opponent of DST in Western Australia."
     ]
   };
   
-  // Get random fun fact for the selected timezone
-  const facts = funFacts[timezone];
-  const randomFact = facts[Math.floor(Math.random() * facts.length)];
+  // Practical DST tips relevant to daily life
+  const practicalTips = [
+    "TIP: Adjust your exercise routine gradually over a few days when time changes to help your body adapt.",
+    "TIP: Change your pet's feeding schedule by 10-15 minutes each day to ease them into the new time.",
+    "TIP: If you have trouble sleeping after a time change, try to maintain consistent bedtime routines.",
+    "TIP: Experts recommend changing clocks before bed rather than waiting until morning.",
+    "TIP: When DST ends, use the extra hour for self-care like meditation or a longer breakfast.",
+    "TIP: Parents with young children can shift bedtimes by 10 minutes each day to ease the transition.",
+    "TIP: Meal timing affects your body clock - try to maintain consistent meal times after DST changes.",
+    "TIP: Smart home devices usually update automatically, but manual clocks need your attention!",
+    "TIP: Consider using the biannual time changes as a reminder to check your smoke alarm batteries."
+  ];
   
+  // Global DST facts
+  const globalDstFacts = [
+    "The concept of DST was first proposed by Benjamin Franklin in 1784, though it wasn't implemented until much later.",
+    "More than 70 countries around the world use some form of Daylight Saving Time.",
+    "Russia experimented with year-round DST but abandoned it in 2014 due to public dissatisfaction.",
+    "The European Union has voted to end mandatory seasonal clock changes, though implementation has been delayed.",
+    "Studies show a temporary increase in heart attacks and traffic accidents in the days following the spring time change.",
+    "The official time change occurs at 2 AM in most countries to minimize disruption to businesses and transportation.",
+    "Hawaii and Arizona (except for the Navajo Nation) don't observe DST in the United States.",
+    "The farming industry often opposes DST despite the myth that it was created for farmers.",
+    "The oil crisis of the 1970s led to expanded use of DST globally to save energy."
+  ];
+  
+  // Decide which category to show
+  const categories = ["facts", "tips", "global"];
+  let selectedCategory;
+  
+  // Determine which category has unseen items
+  const availableCategories = categories.filter(cat => {
+    const items = cat === "facts" ? regionalFacts[timezone] : 
+                  cat === "tips" ? practicalTips : 
+                  globalDstFacts;
+    
+    // Check if we've shown all items in this category
+    return shownFactsTracking[timezone][cat].length < items.length;
+  });
+  
+  // If all categories have been exhausted, reset them
+  if (availableCategories.length === 0) {
+    shownFactsTracking[timezone] = {
+      facts: [],
+      tips: [],
+      global: []
+    };
+    selectedCategory = categories[Math.floor(Math.random() * categories.length)];
+  } else {
+    // Otherwise, randomly select from available categories
+    selectedCategory = availableCategories[Math.floor(Math.random() * availableCategories.length)];
+  }
+  
+  // Get content based on selected category
+  let content, title, icon;
+  let items = [];
+  let trackingArray = shownFactsTracking[timezone][selectedCategory];
+  
+  if (selectedCategory === "facts") {
+    items = regionalFacts[timezone];
+    title = "Local Time Trivia:";
+    icon = "🧠";
+  } else if (selectedCategory === "tips") {
+    items = practicalTips;
+    title = "Practical Time Tip:";
+    icon = "💡";
+  } else {
+    items = globalDstFacts;
+    title = "Global DST Fact:";
+    icon = "🌍";
+  }
+  
+  // Get available items (not yet shown)
+  const availableItems = items.filter(item => !trackingArray.includes(item));
+  
+  // If all items have been shown, reset tracking for this category
+  if (availableItems.length === 0) {
+    shownFactsTracking[timezone][selectedCategory] = [];
+    content = items[Math.floor(Math.random() * items.length)];
+  } else {
+    // Otherwise, get a random unseen item
+    content = availableItems[Math.floor(Math.random() * availableItems.length)];
+  }
+  
+  // Track that we've shown this item
+  shownFactsTracking[timezone][selectedCategory].push(content);
+  
+  // Update the HTML with proper ARIA attributes for accessibility
   funFactDiv.innerHTML = `
-    <div>🧠 Time Trivia:</div>
-    <p>${randomFact}</p>
-    <button id="new-fact-btn" class="highlight">Show me another fact!</button>
+    <div><span aria-hidden="true">${icon}</span> <span class="highlight">${title}</span></div>
+    <p>${content}</p>
+    <button id="new-fact-btn" aria-label="Show me another fact or tip">Show me another fact!</button>
   `;
   
   // Add event listener for the new fact button
   document.getElementById('new-fact-btn').addEventListener('click', function() {
-    const newFact = facts[Math.floor(Math.random() * facts.length)];
-    document.getElementById('fun-fact').innerHTML = `
-      <div>🧠 Time Trivia:</div>
-      <p>${newFact}</p>
-      <button id="new-fact-btn" class="highlight">Show me another fact!</button>
-    `;
-    document.getElementById('new-fact-btn').addEventListener('click', function() {
-      updateFunFact(timezone);
-    });
+    updateFunFact(timezone);
   });
 }
 
@@ -553,19 +699,31 @@ function updateAchievements() {
   // Count visited timezones
   const visitedCount = Object.keys(visitedTimezones).length;
   
-  // If we've visited all 7 timezones, show an achievement
-  if (visitedCount === 7 && !document.getElementById('achievement')) {
+  // Create an achievement div if it doesn't exist yet
+  if (!document.getElementById('achievement')) {
     const achievementDiv = document.createElement('div');
     achievementDiv.id = 'achievement';
-    achievementDiv.className = 'fun-fact animation-pulse';
-    achievementDiv.innerHTML = `
-      <div>🏆 Achievement Unlocked: Time Traveler!</div>
-      <p>You've explored all Australian time zones! You're officially a Time Zone expert!</p>
-    `;
+    achievementDiv.className = 'achievement';
+    achievementDiv.style.display = 'none'; // Hide initially
+    achievementDiv.setAttribute('aria-live', 'polite'); // Announce to screen readers when changed
     
     // Insert after the fun fact
     const funFactDiv = document.getElementById('fun-fact');
     funFactDiv.parentNode.insertBefore(achievementDiv, funFactDiv.nextSibling);
+  }
+  
+  // Update the achievement div
+  const achievementDiv = document.getElementById('achievement');
+  
+  // If we've visited all 7 timezones, show the achievement
+  if (visitedCount === 7) {
+    achievementDiv.className = 'achievement animation-pulse';
+    achievementDiv.style.display = 'block';
+    achievementDiv.innerHTML = `
+      <div><span aria-hidden="true">🏆</span> Achievement Unlocked: Time Traveler!</div>
+      <p>You've explored all Australian time zones! You're officially a Time Zone expert!</p>
+      <p>Understanding time zones helps us connect across global distances while respecting local schedules.</p>
+    `;
   }
 }
 
