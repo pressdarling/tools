@@ -158,6 +158,39 @@ def load_docs_for_file(html_file):
     return ""
 
 
+def find_python_tools():
+    """Find Python tools in the python directory."""
+    python_dir = Path("python")
+    if not python_dir.exists() or not python_dir.is_dir():
+        return []
+        
+    tools = []
+    # Read README.md to get descriptions
+    readme_path = python_dir / "README.md"
+    readme_content = ""
+    if readme_path.exists():
+        with open(readme_path, "r", encoding="utf-8") as f:
+            readme_content = f.read()
+            
+    for py_file in python_dir.glob("*.py"):
+        name = py_file.name
+        # Try to extract description from README
+        description = ""
+        pattern = rf"## {re.escape(name)}\s*\n\n(.*?)(?:\n##|\Z)"
+        match = re.search(pattern, readme_content, re.DOTALL)
+        if match:
+            description = match.group(1).strip()
+            
+        tools.append({
+            "name": name,
+            "file_name": f"python/{name}",
+            "docs": description,
+            "is_python": True
+        })
+        
+    return tools
+
+
 def build_index_html(data):
     """
     Build the index.html file with all tools.
