@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSS Scroll Snap Playground</title>
+  <style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f5f5f5;
+    color: #333;
+    line-height: 1.5;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: Helvetica, Arial, sans-serif;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .intro {
+    max-width: 800px;
+    margin: 0 auto 30px auto;
+    text-align: left;
+  }
+
+  .info-panel {
+    background-color: #e9f7fe;
+    border-left: 4px solid #2196F3;
+    padding: 15px 20px;
+    margin: 20px 0;
+    border-radius: 4px;
+  }
+
+  .collapsible {
+    background-color: #f8f8f8;
+    color: #444;
+    cursor: pointer;
+    padding: 18px;
+    width: 100%;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: 16px;
+    border-radius: 4px;
+    margin-bottom: 5px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .active, .collapsible:hover {
+    background-color: #eee;
+  }
+
+  .collapsible:after {
+    content: '+';
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+  .active:after {
+    content: '−';
+  }
+
+  .collapsible-content {
+    padding: 0 18px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease-out;
+    background-color: white;
+    border-radius: 0 0 4px 4px;
+  }
+
+  .playground {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+
+  @media (max-width: 768px) {
+    .playground {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .controls {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .control-group {
+    margin-bottom: 20px;
+    position: relative;
+  }
+
+  .control-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .control-group h3 {
+    margin: 0;
+    font-size: 16px;
+  }
+
+  .info-button {
+    background-color: #2196F3;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+  }
+
+  label {
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  select, input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    font-family: Helvetica, Arial, sans-serif;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 100px;
+    font-size: 16px;
+    font-family: monospace;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    resize: vertical;
+  }
+
+  .presets {
+    margin-top: 0;
+    margin-bottom: 30px;
+  }
+
+  .preset-button {
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-right: 8px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+  }
+
+  .preset-button:hover {
+    background-color: #e0e0e0;
+  }
+
+  .preview-container {
+    position: relative;
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+
+  .visualization-toggle {
+    display: flex;
+    align-items: center;
+  }
+
+  .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+    margin-left: 10px;
+  }
+
+  .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 24px;
+  }
+
+  .toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+  }
+
+  input:checked + .toggle-slider {
+    background-color: #2196F3;
+  }
+
+  input:checked + .toggle-slider:before {
+    transform: translateX(26px);
+  }
+
+  .scroll-container {
+    --scroll-snap-type-x: none;
+    --scroll-snap-type-y: none;
+    --scroll-snap-type-strictness: proximity;
+    
+    width: 100%;
+    height: 300px;
+    overflow: auto;
+    border: 2px solid #ddd;
+    position: relative;
+    scroll-snap-type: var(--scroll-snap-type-x) var(--scroll-snap-type-y) var(--scroll-snap-type-strictness);
+  }
+
+  .scroll-content {
+    display: flex;
+    flex-wrap: wrap;
+    min-height: 100%;
+    min-width: 100%;
+  }
+
+  .scroll-item {
+    --scroll-snap-align: start;
+    --scroll-snap-stop: normal;
+    
+    flex: 0 0 250px;
+    height: 150px;
+    margin: 10px;
+    background-color: #e9e9e9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: #555;
+    position: relative;
+    scroll-snap-align: var(--scroll-snap-align);
+    scroll-snap-stop: var(--scroll-snap-stop);
+  }
+
+  /* Visualization styles */
+  .snap-indicator {
+    position: absolute;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  .snap-point {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: rgba(255, 0, 0, 0.7);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 11;
+  }
+
+  .snap-line {
+    position: absolute;
+    background-color: rgba(255, 0, 0, 0.3);
+    z-index: 10;
+  }
+
+  .snap-line.horizontal {
+    height: 2px;
+    width: 100%;
+    left: 0;
+  }
+
+  .snap-line.vertical {
+    width: 2px;
+    height: 100%;
+    top: 0;
+  }
+
+  .snap-area {
+    position: absolute;
+    background-color: rgba(0, 128, 255, 0.1);
+    border: 1px dashed rgba(0, 128, 255, 0.5);
+    z-index: 9;
+  }
+
+  .code-output {
+    margin-top: 20px;
+  }
+
+  .code-title {
+    font-weight: bold;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .code-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .code-button {
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .code-button:hover {
+    background-color: #0b7dda;
+  }
+
+  .code-block {
+    background-color: #f8f8f8;
+    border-radius: 4px;
+    padding: 15px;
+    overflow: auto;
+    font-family: monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0;
+    white-space: pre;
+  }
+
+  /* Modal */
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+  }
+
+  .modal-content {
+    background-color: #fefefe;
+    margin: 10% auto;
+    padding: 20px;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .modal-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+  .close {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .close:hover {
+    color: black;
+  }
+
+  .compat-icon {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    margin-right: 5px;
+    vertical-align: middle;
+  }
+
+  .compat-good {
+    background-color: #4CAF50;
+  }
+
+  .compat-partial {
+    background-color: #FFC107;
+  }
+
+  .compat-bad {
+    background-color: #F44336;
+  }
+
+  .browser-support {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+  }
+
+  .browser-item {
+    display: flex;
+    align-items: center;
+    padding: 5px 10px;
+    background-color: #f8f8f8;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+
+  .compatibility-notes {
+    margin-top: 20px;
+    background-color: #fff8e1;
+    border-left: 4px solid #ffc107;
+    padding: 15px;
+    border-radius: 4px;
+  }
+
+  .compatibility-notes h3 {
+    margin-top: 0;
+    color: #ff8f00;
+  }
+
+  .compatibility-list {
+    margin: 0;
+    padding-left: 20px;
+  }
+
+  .tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted #999;
+    cursor: help;
+  }
+
+  .tooltip .tooltip-text {
+    visibility: hidden;
+    width: 200px;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -100px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 14px;
+    pointer-events: none;
+  }
+
+  .tooltip:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+  }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>CSS Scroll Snap Playground</h1>
+      <p>An interactive tool to visualize and understand CSS Scroll Snap properties</p>
+    </div>
+
+    <div class="intro">
+      <button class="collapsible">What is CSS Scroll Snap?</button>
+      <div class="collapsible-content">
+        <p>CSS Scroll Snap is a module of CSS that allows web developers to create well-controlled scroll experiences by declaring scroll snap positions. When a user scrolls, the browser will automatically adjust the scroll position to snap to specific elements or positions, creating a more guided and controlled scroll experience.</p>
+        <p>This powerful feature enables implementations of carousels, paginated content, and other UI patterns without relying on JavaScript to control scrolling behavior.</p>
+      </div>
+
+      <button class="collapsible">How to Use This Playground</button>
+      <div class="collapsible-content">
+        <p>This interactive playground allows you to experiment with CSS Scroll Snap properties and see their effects in real-time:</p>
+        <ol>
+          <li><strong>Start with a preset:</strong> Choose a common scroll snap pattern from the preset buttons to quickly see different implementations.</li>
+          <li><strong>Adjust properties:</strong> Modify the scroll container and scroll item properties to see how different settings affect scrolling behavior.</li>
+          <li><strong>Visualize the snap points:</strong> Toggle the visualization to see where snap points are located and how they influence the scroll behavior.</li>
+          <li><strong>Check the generated CSS:</strong> Copy the generated CSS to use in your own projects.</li>
+        </ol>
+        <p>For each property, you can click the info button (i) to learn more about what it does and its browser compatibility.</p>
+      </div>
+
+      <button class="collapsible">Browser Support & Compatibility</button>
+      <div class="collapsible-content">
+        <p>CSS Scroll Snap is supported in all modern browsers, but there are some implementation differences to be aware of:</p>
+        <div class="browser-support">
+          <div class="browser-item"><span class="compat-icon compat-good"></span> Chrome 69+</div>
+          <div class="browser-item"><span class="compat-icon compat-good"></span> Firefox 68+</div>
+          <div class="browser-item"><span class="compat-icon compat-good"></span> Safari 11+</div>
+          <div class="browser-item"><span class="compat-icon compat-good"></span> Edge 79+</div>
+          <div class="browser-item"><span class="compat-icon compat-partial"></span> IE (Not supported)</div>
+        </div>
+        <p>Some properties like <code>scroll-snap-stop: always</code> have partial support in certain browsers. The visualization in this playground will help you understand how scroll snap works in your current browser.</p>
+      </div>
+    </div>
+
+    <div class="playground">
+      <div class="controls">
+        <div class="control-group">
+          <div class="control-header">
+            <h3>Presets</h3>
+            <div class="info-button" data-info="presets">i</div>
+          </div>
+          <div class="preset-buttons">
+            <button class="preset-button" data-preset="carousel">Horizontal Carousel</button>
+            <button class="preset-button" data-preset="vertical-scroll">Vertical Scroll</button>
+            <button class="preset-button" data-preset="grid">Grid Layout</button>
+            <button class="preset-button" data-preset="pages">Paged Content</button>
+          </div>
+        </div>
+        
+        <div class="control-group">
+          <div class="control-header">
+            <h3>Scroll Container Properties</h3>
+            <div class="info-button" data-info="container">i</div>
+          </div>
+          
+          <label for="scroll-snap-type-x">scroll-snap-type-x:</label>
+          <select id="scroll-snap-type-x">
+            <option value="none">none</option>
+            <option value="x">x</option>
+            <option value="x mandatory">x mandatory</option>
+            <option value="x proximity">x proximity</option>
+          </select>
+          
+          <label for="scroll-snap-type-y">scroll-snap-type-y:</label>
+          <select id="scroll-snap-type-y">
+            <option value="none">none</option>
+            <option value="y">y</option>
+            <option value="y mandatory">y mandatory</option>
+            <option value="y proximity">y proximity</option>
+          </select>
+        </div>
+        
+        <div class="control-group">
+          <div class="control-header">
+            <h3>Scroll Item Properties</h3>
+            <div class="info-button" data-info="item">i</div>
+          </div>
+          
+          <label for="scroll-snap-align">scroll-snap-align:</label>
+          <select id="scroll-snap-align">
+            <option value="start">start</option>
+            <option value="center">center</option>
+            <option value="end">end</option>
+          </select>
+          
+          <label for="scroll-snap-stop">scroll-snap-stop:</label>
+          <select id="scroll-snap-stop">
+            <option value="normal">normal</option>
+            <option value="always">always</option>
+          </select>
+        </div>
+        
+        <div class="control-group">
+          <div class="control-header">
+            <h3>Content Layout</h3>
+            <div class="info-button" data-info="layout">i</div>
+          </div>
+          
+          <label for="items-count">Number of items:</label>
+          <input type="number" id="items-count" min="1" max="50" value="10">
+          
+          <label for="item-width">Item width (px):</label>
+          <input type="number" id="item-width" min="50" max="500" value="250">
+          
+          <label for="item-height">Item height (px):</label>
+          <input type="number" id="item-height" min="50" max="500" value="150">
+        </div>
+      </div>
+      
+      <div class="preview-container">
+        <div class="preview-header">
+          <h2>Preview</h2>
+          <div class="visualization-toggle">
+            <span>Show visualization</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="visualization-toggle" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        
+        <div id="scroll-container" class="scroll-container">
+          <div id="scroll-content" class="scroll-content">
+            <!-- Items will be generated here -->
+          </div>
+        </div>
+        
+        <div class="code-output">
+          <div class="code-title">
+            <span>Generated CSS</span>
+            <div class="code-actions">
+              <button id="copy-css" class="code-button">Copy to Clipboard</button>
+              <button id="save-css" class="code-button">Download CSS</button>
+            </div>
+          </div>
+          <pre id="css-output" class="code-block"></pre>
+        </div>
+        
+        <div class="compatibility-notes">
+          <h3>Current Browser Implementation Notes</h3>
+          <p>The behavior you see in the preview depends on your current browser's implementation of CSS Scroll Snap. Use the visualization to understand how your browser interprets these properties.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for information -->
+  <div id="info-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-title">Information</h3>
+        <span class="close">&times;</span>
+      </div>
+      <div id="modal-body">
+        <!-- Modal content will be inserted here -->
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+// DOM Elements
+const scrollContainer = document.getElementById('scroll-container');
+const scrollContent = document.getElementById('scroll-content');
+const itemsCountInput = document.getElementById('items-count');
+const itemWidthInput = document.getElementById('item-width');
+const itemHeightInput = document.getElementById('item-height');
+const scrollSnapTypeXSelect = document.getElementById('scroll-snap-type-x');
+const scrollSnapTypeYSelect = document.getElementById('scroll-snap-type-y');
+const scrollSnapAlignSelect = document.getElementById('scroll-snap-align');
+const scrollSnapStopSelect = document.getElementById('scroll-snap-stop');
+const visualizationToggle = document.getElementById('visualization-toggle');
+const cssOutput = document.getElementById('css-output');
+const presetButtons = document.querySelectorAll('.preset-button');
+const copyButton = document.getElementById('copy-css');
+const saveButton = document.getElementById('save-css');
+const infoButtons = document.querySelectorAll('.info-button');
+const modal = document.getElementById('info-modal');
+const modalTitle = document.getElementById('modal-title');
+const modalBody = document.getElementById('modal-body');
+const closeModal = document.querySelector('.close');
+const collapsibles = document.querySelectorAll('.collapsible');
+
+// Info content for modals
+const infoContent = {
+  presets: {
+    title: "Presets - Quick Start Templates",
+    content: `
+      <p>These presets provide ready-made configurations for common scroll snap use cases:</p>
+      <ul>
+        <li><strong>Horizontal Carousel</strong> - A classic side-scrolling carousel with centered items and mandatory snapping.</li>
+        <li><strong>Vertical Scroll</strong> - A vertical scrolling layout with items that snap at their start position.</li>
+        <li><strong>Grid Layout</strong> - A grid of items with both horizontal and vertical snap points.</li>
+        <li><strong>Paged Content</strong> - Full-page snapping for creating slideshow-like experiences.</li>
+      </ul>
+      <p>Clicking a preset will automatically configure all the properties below to create that specific scroll experience.</p>
+    `
+  },
+  container: {
+    title: "Scroll Container Properties",
+    content: `
+      <p>These properties define how the scrollable container behaves:</p>
+      <h4>scroll-snap-type-x</h4>
+      <p>Controls snapping behavior along the horizontal (x) axis:</p>
+      <ul>
+        <li><strong>none</strong> - No snapping on horizontal axis</li>
+        <li><strong>x</strong> - Basic horizontal snapping</li>
+        <li><strong>x mandatory</strong> - Always snaps to a snap position when scrolling ends <span class="tooltip">⚠️<span class="tooltip-text">Safari has minor differences in mandatory implementation</span></span></li>
+        <li><strong>x proximity</strong> - Snaps only if a snap position is close when scrolling ends</li>
+      </ul>
+      
+      <h4>scroll-snap-type-y</h4>
+      <p>Controls snapping behavior along the vertical (y) axis:</p>
+      <ul>
+        <li><strong>none</strong> - No snapping on vertical axis</li>
+        <li><strong>y</strong> - Basic vertical snapping</li>
+        <li><strong>y mandatory</strong> - Always snaps to a snap position when scrolling ends</li>
+        <li><strong>y proximity</strong> - Snaps only if a snap position is close when scrolling ends</li>
+      </ul>
+      
+      <div class="browser-support">
+        <p><strong>Browser Compatibility:</strong></p>
+        <div class="browser-item"><span class="compat-icon compat-good"></span> Chrome 69+</div>
+        <div class="browser-item"><span class="compat-icon compat-good"></span> Firefox 68+</div>
+        <div class="browser-item"><span class="compat-icon compat-good"></span> Safari 11+</div>
+        <div class="browser-item"><span class="compat-icon compat-good"></span> Edge 79+</div>
+        <div class="browser-item"><span class="compat-icon compat-partial"></span> IE (Not supported)</div>
+      </div>
+    `
+  },
+  item: {
+    title: "Scroll Item Properties",
+    content: `
+      <p>These properties define how each item within the scrollable container behaves:</p>
+      
+      <h4>scroll-snap-align</h4>
+      <p>Specifies which part of the item should align with the container's snap position:</p>
+      <ul>
+        <li><strong>start</strong> - Aligns the start edge of the item with the container's snap position</li>
+        <li><strong>center</strong> - Aligns the center of the item with the container's snap position</li>
+        <li><strong>end</strong> - Aligns the end edge of the item with the container's snap position</li>
+      </ul>
+      
+      <h4>scroll-snap-stop</h4>
+      <p>Controls whether the scroll can pass over snap positions:</p>
+      <ul>
+        <li><strong>normal</strong> - Allows scrolling to pass over snap positions</li>
+        <li><strong>always</strong> - Forces the scroll to stop at each snap position <span class="tooltip">⚠️<span class="tooltip-text">Safari has partial support for this value</span></span></li>
+      </ul>
+      
+      <div class="browser-support">
+        <p><strong>Browser Compatibility:</strong></p>
+        <p>For scroll-snap-align:</p>
+        <div class="browser-item"><span class="compat-icon compat-good"></span> Chrome 69+</div>
+        <div class="browser-item"><span class="compat-icon compat-good"></span> Firefox 68+</div>
+        <div class="browser-item"><span class="compat-icon compat-good"></span> Safari 11+</div>
+        <div class="browser-item"><span class="compat-icon compat-good"></span> Edge 79+</div>
+        
+        <p>For scroll-snap-stop:</p>
+        <div class="browser-item"><span class="compat-icon compat-good"></span> Chrome 75+</div>
+        <div class="browser-item"><span class="compat-icon compat-good"></span> Firefox 76+</div>
+        <div class="browser-item"><span class="compat-icon compat-partial"></span> Safari (Partial support)</div>
+        <div class="browser-item"><span class="compat-icon compat-good"></span> Edge 79+</div>
+      </div>
+    `
+  },
+  layout: {
+    title: "Content Layout Settings",
+    content: `
+      <p>These settings control the visual layout of the items in the container:</p>
+      
+      <h4>Number of items</h4>
+      <p>Controls how many items are displayed in the container. This allows you to test scroll snap behavior with different quantities of content.</p>
+      
+      <h4>Item width (px)</h4>
+      <p>Sets the width of each item in pixels. This affects how many items can be visible at once and can impact the snapping behavior. For responsive designs, you would typically use percentage or viewport-relative units instead of fixed pixel values.</p>
+      
+      <h4>Item height (px)</h4>
+      <p>Sets the height of each item in pixels. This affects the vertical layout and can impact vertical snapping behavior.</p>
+      
+      <p>These settings allow you to simulate different types of content arrangements to test how scroll snap works across various layout scenarios.</p>
+    `
+  }
+};
+
+// Init
+generateItems();
+updateCSSOutput();
+
+// Event Listeners
+itemsCountInput.addEventListener('input', generateItems);
+itemWidthInput.addEventListener('input', updateItemDimensions);
+itemHeightInput.addEventListener('input', updateItemDimensions);
+scrollSnapTypeXSelect.addEventListener('change', updateScrollContainer);
+scrollSnapTypeYSelect.addEventListener('change', updateScrollContainer);
+scrollSnapAlignSelect.addEventListener('change', updateScrollItems);
+scrollSnapStopSelect.addEventListener('change', updateScrollItems);
+visualizationToggle.addEventListener('change', toggleVisualization);
+presetButtons.forEach(button => {
+  button.addEventListener('click', applyPreset);
+});
+scrollContainer.addEventListener('scroll', updateVisualization);
+copyButton.addEventListener('click', copyCSS);
+saveButton.addEventListener('click', saveCSS);
+
+// Modal event listeners
+infoButtons.forEach(button => {
+  button.addEventListener('click', showInfo);
+});
+
+closeModal.addEventListener('click', () => {
+  modal.style.display = "none";
+});
+
+window.addEventListener('click', (event) => {
+  if (event.target === modal) {
+    modal.style.display = "none";
+  }
+});
+
+// Collapsible sections
+collapsibles.forEach(collapsible => {
+  collapsible.addEventListener('click', function() {
+    this.classList.toggle('active');
+    const content = this.nextElementSibling;
+    
+    if (content.style.maxHeight) {
+      content.style.maxHeight = null;
+    } else {
+      content.style.maxHeight = content.scrollHeight + "px";
+    }
+  });
+});
+
+// Functions
+function generateItems() {
+  const count = parseInt(itemsCountInput.value) || 10;
+  scrollContent.innerHTML = '';
+  
+  for (let i = 1; i <= count; i++) {
+    const item = document.createElement('div');
+    item.className = 'scroll-item';
+    item.textContent = i;
+    item.style.width = `${itemWidthInput.value}px`;
+    item.style.height = `${itemHeightInput.value}px`;
+    scrollContent.appendChild(item);
+  }
+  
+  updateScrollItems();
+  updateVisualization();
+}
+
+function updateItemDimensions() {
+  const width = itemWidthInput.value;
+  const height = itemHeightInput.value;
+  
+  document.querySelectorAll('.scroll-item').forEach(item => {
+    item.style.width = `${width}px`;
+    item.style.height = `${height}px`;
+  });
+  
+  updateCSSOutput();
+  updateVisualization();
+}
+
+function updateScrollContainer() {
+  const typeX = scrollSnapTypeXSelect.value;
+  const typeY = scrollSnapTypeYSelect.value;
+  
+  let xType = 'none';
+  let yType = 'none';
+  let strictness = 'proximity';
+  
+  if (typeX.includes('mandatory')) {
+    xType = 'x';
+    strictness = 'mandatory';
+  } else if (typeX.includes('proximity')) {
+    xType = 'x';
+    strictness = 'proximity';
+  } else if (typeX === 'x') {
+    xType = 'x';
+  }
+  
+  if (typeY.includes('mandatory')) {
+    yType = 'y';
+    strictness = 'mandatory';
+  } else if (typeY.includes('proximity')) {
+    yType = 'y';
+    strictness = 'proximity';
+  } else if (typeY === 'y') {
+    yType = 'y';
+  }
+  
+  scrollContainer.style.setProperty('--scroll-snap-type-x', xType);
+  scrollContainer.style.setProperty('--scroll-snap-type-y', yType);
+  scrollContainer.style.setProperty('--scroll-snap-type-strictness', strictness);
+  
+  // Apply the actual CSS property
+  if (xType !== 'none' && yType !== 'none') {
+    scrollContainer.style.scrollSnapType = `both ${strictness}`;
+  } else if (xType !== 'none') {
+    scrollContainer.style.scrollSnapType = `${xType} ${strictness}`;
+  } else if (yType !== 'none') {
+    scrollContainer.style.scrollSnapType = `${yType} ${strictness}`;
+  } else {
+    scrollContainer.style.scrollSnapType = 'none';
+  }
+  
+  updateCSSOutput();
+  updateVisualization();
+}
+
+function updateScrollItems() {
+  const align = scrollSnapAlignSelect.value;
+  const stop = scrollSnapStopSelect.value;
+  
+  document.querySelectorAll('.scroll-item').forEach(item => {
+    item.style.setProperty('--scroll-snap-align', align);
+    item.style.setProperty('--scroll-snap-stop', stop);
+    item.style.scrollSnapAlign = align;
+    item.style.scrollSnapStop = stop;
+  });
+  
+  updateCSSOutput();
+  updateVisualization();
+}
+
+function updateCSSOutput() {
+  const typeX = scrollContainer.style.getPropertyValue('--scroll-snap-type-x');
+  const typeY = scrollContainer.style.getPropertyValue('--scroll-snap-type-y');
+  const strictness = scrollContainer.style.getPropertyValue('--scroll-snap-type-strictness');
+  const align = document.querySelector('.scroll-item')?.style.getPropertyValue('--scroll-snap-align');
+  const stop = document.querySelector('.scroll-item')?.style.getPropertyValue('--scroll-snap-stop');
+  
+  let scrollTypeCSS = 'none';
+  
+  if (typeX !== 'none' && typeY !== 'none') {
+    scrollTypeCSS = `both ${strictness}`;
+  } else if (typeX !== 'none') {
+    scrollTypeCSS = `${typeX} ${strictness}`;
+  } else if (typeY !== 'none') {
+    scrollTypeCSS = `${typeY} ${strictness}`;
+  }
+  
+  const css = `.scroll-container {
+  scroll-snap-type: ${scrollTypeCSS};
+  overflow: auto;
+  width: 100%;
+  height: 300px;
+}
+
+.scroll-item {
+  scroll-snap-align: ${align};
+  scroll-snap-stop: ${stop};
+  width: ${itemWidthInput.value}px;
+  height: ${itemHeightInput.value}px;
+}`;
+
+  cssOutput.textContent = css;
+}
+
+function toggleVisualization() {
+  const showVisualization = visualizationToggle.checked;
+  
+  if (showVisualization) {
+    updateVisualization();
+  } else {
+    clearVisualization();
+  }
+}
+
+function clearVisualization() {
+  document.querySelectorAll('.snap-indicator, .snap-point, .snap-line, .snap-area').forEach(el => {
+    el.remove();
+  });
+}
+
+function updateVisualization() {
+  if (!visualizationToggle.checked) return;
+  
+  clearVisualization();
+  
+  const items = document.querySelectorAll('.scroll-item');
+  const containerRect = scrollContainer.getBoundingClientRect();
+  const contentRect = scrollContent.getBoundingClientRect();
+  const align = scrollSnapAlignSelect.value;
+  
+  // Create container for all visualization elements
+  const visualizationContainer = document.createElement('div');
+  visualizationContainer.className = 'snap-indicator';
+  scrollContainer.appendChild(visualizationContainer);
+  
+  items.forEach(item => {
+    const itemRect = item.getBoundingClientRect();
+    
+    // Calculate snap point position based on alignment
+    let snapPointX, snapPointY;
+    
+    switch (align) {
+      case 'start':
+        snapPointX = itemRect.left - contentRect.left + scrollContainer.scrollLeft;
+        snapPointY = itemRect.top - contentRect.top + scrollContainer.scrollTop;
+        break;
+      case 'center':
+        snapPointX = itemRect.left - contentRect.left + scrollContainer.scrollLeft + itemRect.width / 2;
+        snapPointY = itemRect.top - contentRect.top + scrollContainer.scrollTop + itemRect.height / 2;
+        break;
+      case 'end':
+        snapPointX = itemRect.left - contentRect.left + scrollContainer.scrollLeft + itemRect.width;
+        snapPointY = itemRect.top - contentRect.top + scrollContainer.scrollTop + itemRect.height;
+        break;
+    }
+    
+    // Create snap point
+    const snapPoint = document.createElement('div');
+    snapPoint.className = 'snap-point';
+    snapPoint.style.left = `${snapPointX}px`;
+    snapPoint.style.top = `${snapPointY}px`;
+    visualizationContainer.appendChild(snapPoint);
+    
+    // Create snap lines
+    const horizontalLine = document.createElement('div');
+    horizontalLine.className = 'snap-line horizontal';
+    horizontalLine.style.top = `${snapPointY}px`;
+    visualizationContainer.appendChild(horizontalLine);
+    
+    const verticalLine = document.createElement('div');
+    verticalLine.className = 'snap-line vertical';
+    verticalLine.style.left = `${snapPointX}px`;
+    visualizationContainer.appendChild(verticalLine);
+    
+    // Create snap area to show the item's influence area
+    const snapArea = document.createElement('div');
+    snapArea.className = 'snap-area';
+    snapArea.style.left = `${itemRect.left - contentRect.left + scrollContainer.scrollLeft}px`;
+    snapArea.style.top = `${itemRect.top - contentRect.top + scrollContainer.scrollTop}px`;
+    snapArea.style.width = `${itemRect.width}px`;
+    snapArea.style.height = `${itemRect.height}px`;
+    visualizationContainer.appendChild(snapArea);
+  });
+}
+
+function applyPreset(event) {
+  const preset = event.target.dataset.preset;
+  
+  switch (preset) {
+    case 'carousel':
+      // Horizontal carousel
+      scrollSnapTypeXSelect.value = 'x mandatory';
+      scrollSnapTypeYSelect.value = 'none';
+      scrollSnapAlignSelect.value = 'center';
+      scrollSnapStopSelect.value = 'normal';
+      itemsCountInput.value = 10;
+      itemWidthInput.value = 250;
+      itemHeightInput.value = 150;
+      break;
+      
+    case 'vertical-scroll':
+      // Vertical scroll with snap points
+      scrollSnapTypeXSelect.value = 'none';
+      scrollSnapTypeYSelect.value = 'y proximity';
+      scrollSnapAlignSelect.value = 'start';
+      scrollSnapStopSelect.value = 'normal';
+      itemsCountInput.value = 8;
+      itemWidthInput.value = 400;
+      itemHeightInput.value = 200;
+      break;
+      
+    case 'grid':
+      // Grid layout with snap points
+      scrollSnapTypeXSelect.value = 'x proximity';
+      scrollSnapTypeYSelect.value = 'y proximity';
+      scrollSnapAlignSelect.value = 'start';
+      scrollSnapStopSelect.value = 'normal';
+      itemsCountInput.value = 12;
+      itemWidthInput.value = 180;
+      itemHeightInput.value = 120;
+      break;
+      
+    case 'pages':
+      // Full page snapping
+      scrollSnapTypeXSelect.value = 'x mandatory';
+      scrollSnapTypeYSelect.value = 'none';
+      scrollSnapAlignSelect.value = 'start';
+      scrollSnapStopSelect.value = 'always';
+      itemsCountInput.value = 5;
+      itemWidthInput.value = 400;
+      itemHeightInput.value = 250;
+      break;
+  }
+  
+  // Apply the changes
+  generateItems();
+  updateItemDimensions();
+  updateScrollContainer();
+}
+
+function copyCSS() {
+  const cssText = cssOutput.textContent;
+  navigator.clipboard.writeText(cssText).then(() => {
+    const originalText = copyButton.textContent;
+    copyButton.textContent = 'Copied!';
+    setTimeout(() => {
+      copyButton.textContent = originalText;
+    }, 2000);
+  }).catch(err => {
+    console.error('Failed to copy: ', err);
+  });
+}
+
+function saveCSS() {
+  const cssText = cssOutput.textContent;
+  const blob = new Blob([cssText], { type: 'text/css' });
+  const url = URL.createObjectURL(blob);
+  
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'scroll-snap-playground-snippet.css';
+  document.body.appendChild(a);
+  a.click();
+  
+  // Clean up
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 0);
+}
+
+function showInfo(event) {
+  const infoType = event.target.dataset.info;
+  const info = infoContent[infoType];
+  
+  if (info) {
+    modalTitle.textContent = info.title;
+    modalBody.innerHTML = info.content;
+    modal.style.display = 'block';
+  }
+}
+
+// Open the first collapsible by default
+if (collapsibles.length > 0) {
+  collapsibles[0].click();
+}
+  </script>
+</body>
+</html>
