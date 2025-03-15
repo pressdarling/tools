@@ -89,10 +89,28 @@
             background-color: #2980b9;
         }
         .preset-info {
-            flex: 1;
-            font-size: 14px;
-            color: #666;
+          flex: 1;
+          font-size: 14px;
+          color: #666;
         }
+        /* New styles for sort options */
+        .sort-options {
+          display: flex;
+          gap: 1rem;
+          margin-bottom: 15px;
+          align-items: center;
+          justify-content: center;
+        }
+        .sort-option {
+          cursor: pointer;
+          padding: 8px 12px;
+          background-color: #3498db;
+          color: white;
+          border: none;
+          border-radius: 4px;
+        }
+        .sort-option.active {
+          background-color: #2980b9;
         .disclaimer {
             font-size: 14px;
             color: #777;
@@ -130,6 +148,14 @@
 
             <div class="presets">
                 <h2>Preset prices (all per million tokens)</h2>
+                <!-- New sorting options added above the preset list -->
+                <div class="sort-options">
+                  <span>Sort by:</span>
+                    <button class="sort-option active" onclick="sortPresets('alpha')" aria-pressed="true">Alphabetical</button>
+                    <button class="sort-option" onclick="sortPresets('default')" aria-pressed="false">Default Order</button>
+                    <button class="sort-option" onclick="sortPresets('input')" aria-pressed="false">Input Price</button>
+                    <button class="sort-option" onclick="sortPresets('output')" aria-pressed="false">Output Price</button>
+                </div>
                 <div id="presetList"></div>
             </div>
         </div>
@@ -232,22 +258,55 @@
 
         function createPresetButtons() {
             const presetList = document.getElementById('presetList');
+            let index = 0;
             for (const [key, preset] of Object.entries(presets)) {
-                const presetItem = document.createElement('div');
-                presetItem.className = 'preset-item';
-                
-                let prices;
-                if (preset.getPrice) {
-                    prices = preset.getPrice();
-                } else {
-                    prices = { input: preset.input, output: preset.output };
-                }
-                presetItem.innerHTML = `
-                    <button class="preset-btn" onclick="setPreset('${key}')">${preset.name}</button>
-                    <span class="preset-info">Input: ${formatPrice(prices.input)} / Output: ${formatPrice(prices.output)}</span>
-                `;
-                presetList.appendChild(presetItem);
+              const presetItem = document.createElement('div');
+              presetItem.className = 'preset-item';
+              presetItem.dataset.name = preset.name;
+              presetItem.dataset.index = index;
+              let prices;
+              if (preset.getPrice) {
+                prices = preset.getPrice();
+              } else {
+                prices = { input: preset.input, output: preset.output };
+              }
+              // Store prices for sorting by input and output
+              presetItem.dataset.input = prices.input;
+              presetItem.dataset.output = prices.output;
+              presetItem.innerHTML = `
+                <button class="preset-btn" onclick="setPreset('${key}')">${preset.name}</button>
+                <span class="preset-info">Input: ${formatPrice(prices.input)} / Output: ${formatPrice(prices.output)}</span>
+              `;
+              presetList.appendChild(presetItem);
+              index++;
             }
+        }
+
+        // New function to sort the preset list
+        function sortPresets(criteria) {
+          const presetList = document.getElementById('presetList');
+          const presetItems = Array.from(presetList.children);
+          presetItems.sort((a, b) => {
+          if (criteria === 'alpha') {
+            return a.dataset.name.toLowerCase().localeCompare(b.dataset.name.toLowerCase());
+          } else if (criteria === 'default') {
+            return Number(a.dataset.index) - Number(b.dataset.index);
+          } else if (criteria === 'input') {
+            return parseFloat(a.dataset.input) - parseFloat(b.dataset.input);
+          } else if (criteria === 'output') {
+            return parseFloat(a.dataset.output) - parseFloat(b.dataset.output);
+          }
+          });
+          // Rebuild the preset list with sorted items
+          presetList.innerHTML = '';
+          presetItems.forEach(item => presetList.appendChild(item));
+          // Update active states for sort buttons
+          document.querySelectorAll('.sort-option').forEach(btn => {
+            btn.classList.remove('active');
+            btn.setAttribute('aria-pressed', 'false');
+          });
+          document.querySelector(`.sort-option[onclick="sortPresets('${criteria}')"]`).classList.add('active');
+          document.querySelector(`.sort-option[onclick="sortPresets('${criteria}')"]`).setAttribute('aria-pressed', 'true');
         }
 
         // Create preset buttons and run initial calculation
