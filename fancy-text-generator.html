@@ -77,6 +77,23 @@
     font-size: 16px;
     min-width: 44px;
     min-height: 44px;
+    flex: 1 0 calc(50% - 10px);
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  @media (min-width: 480px) {
+    .transform-btn {
+      flex: 1 0 calc(33.333% - 10px);
+    }
+  }
+  
+  @media (min-width: 768px) {
+    .transform-btn {
+      flex: 0 1 auto;
+    }
   }
   
   .transform-btn:hover {
@@ -153,6 +170,32 @@
     border-width: 0;
   }
   
+  .keyboard-hint {
+    margin-top: 8px;
+    font-size: 14px;
+    color: #666;
+    display: none;
+  }
+  
+  kbd {
+    background-color: #f7f7f7;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.2);
+    color: #333;
+    display: inline-block;
+    font-size: 0.85em;
+    font-family: monospace;
+    line-height: 1;
+    padding: 2px 4px;
+    margin: 0 2px;
+    white-space: nowrap;
+  }
+  
+  body.keyboard-user .keyboard-hint {
+    display: block;
+  }
+  
   .status-message {
     position: fixed;
     bottom: 20px;
@@ -169,6 +212,35 @@
   
   .show-status {
     opacity: 1;
+  }
+  
+  .processing-indicator {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(to right, #4a6fa5, #90caf9);
+    z-index: 1000;
+    animation: loading 2s infinite linear;
+    transform-origin: left;
+    display: none;
+  }
+  
+  @keyframes loading {
+    0% {
+      transform: scaleX(0);
+    }
+    50% {
+      transform: scaleX(0.5);
+    }
+    100% {
+      transform: scaleX(1);
+    }
+  }
+  
+  .processing .processing-indicator {
+    display: block;
   }
   
   @media (min-width: 768px) {
@@ -208,6 +280,9 @@
       <div id="input-help" class="sr-only">
         Type text here to see it transformed into different styles
       </div>
+      <div id="keyboard-hint" class="keyboard-hint">
+        <kbd>Tab</kbd> to navigate, <kbd>Enter</kbd> to select styles
+      </div>
     </div>
     
     <div class="transform-options" role="tablist" aria-label="Text transformation styles">
@@ -235,6 +310,7 @@
   </div>
   
   <div id="status-message" class="status-message" aria-live="assertive"></div>
+  <div class="processing-indicator" id="processing-indicator"></div>
 
 <script type="module">
 // Flip table for upside-down text (from reference code)
@@ -460,26 +536,51 @@ function createOutputBox(title, text, transformType) {
   copyBtn.setAttribute('aria-label', `Copy ${title}`);
   copyBtn.onclick = function() {
     // Use the clipboard API to copy text
-    navigator.clipboard.writeText(text).then(() => {
-      // Show confirmation both visually and for screen readers
-      copyBtn.textContent = 'Copied!';
-      showStatus(`${title} copied to clipboard`);
-      setTimeout(() => {
-        copyBtn.textContent = 'Copy';
-      }, 1500);
-    }).catch(() => {
-      // Fallback for browsers that don't support clipboard API
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text)
+        .then(() => {
+          // Show confirmation both visually and for screen readers
+          copyBtn.textContent = 'Copied!';
+          showStatus(`${title} copied to clipboard`);
+          setTimeout(() => {
+            copyBtn.textContent = 'Copy';
+          }, 1500);
+        })
+        .catch(() => {
+          // Fallback for browsers that don't support clipboard API
+          const textarea = document.createElement('textarea');
+          textarea.value = text;
+          textarea.style.position = 'fixed';  // Avoid scrolling to bottom
+          document.body.appendChild(textarea);
+          textarea.focus();
+          textarea.select();
+          
+          try {
+            document.execCommand('copy');
+            copyBtn.textContent = 'Copied!';
+            showStatus(`${title} copied to clipboard`);
+            setTimeout(() => {
+              copyBtn.textContent = 'Copy';
+            }, 1500);
+          } catch (err) {
+            showStatus('Failed to copy text');
+          }
+          
+          document.body.removeChild(textarea);
+        });
+    } else {
+      // Old-school fallback
       const textarea = document.createElement('textarea');
       textarea.value = text;
-      textarea.style.position = 'fixed';  // Avoid scrolling to bottom
+      textarea.style.position = 'fixed';
       document.body.appendChild(textarea);
       textarea.focus();
       textarea.select();
       
       try {
-        document.execCommand('copy');
-        copyBtn.textContent = 'Copied!';
-        showStatus(`${title} copied to clipboard`);
+        const successful = document.execCommand('copy');
+        copyBtn.textContent = successful ? 'Copied!' : 'Copy';
+        showStatus(successful ? `${title} copied to clipboard` : 'Failed to copy text');
         setTimeout(() => {
           copyBtn.textContent = 'Copy';
         }, 1500);
@@ -488,7 +589,7 @@ function createOutputBox(title, text, transformType) {
       }
       
       document.body.removeChild(textarea);
-    });
+    }
   };
   
   outputBox.appendChild(titleEl);
@@ -496,6 +597,43 @@ function createOutputBox(title, text, transformType) {
   outputBox.appendChild(copyBtn);
   
   return outputBox;
+}
+
+// Utility function to debounce function calls
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+// Optimization for long text transformations
+function optimizedTransform(text, transformFn) {
+  // For very long text, process in chunks to avoid UI freezing
+  const CHUNK_SIZE = 1000;
+  
+  if (text.length <= CHUNK_SIZE) {
+    return transformFn(text);
+  }
+  
+  // Process text in chunks for very long inputs
+  let result = '';
+  for (let i = 0; i < text.length; i += CHUNK_SIZE) {
+    const chunk = text.slice(i, i + CHUNK_SIZE);
+    result += transformFn(chunk);
+    
+    // Allow UI to breathe for extremely long texts
+    if (i > 0 && i % (CHUNK_SIZE * 5) === 0) {
+      console.log(`Processed ${i} of ${text.length} characters`);
+    }
+  }
+  
+  return result;
 }
 
 // Function to generate all outputs
@@ -512,34 +650,59 @@ function generateOutputs(inputText, activeType = 'all') {
     return;
   }
   
-  // Generate outputs based on active type
-  if (activeType === 'all') {
-    Object.keys(transforms).forEach(type => {
-      try {
-        const transformedText = transforms[type](inputText);
-        const outputBox = createOutputBox(transformTitles[type], transformedText, type);
-        outputContainer.appendChild(outputBox);
-      } catch (error) {
-        console.error(`Error transforming with ${type}:`, error);
-      }
-    });
-  } else {
+  // Show processing indicator for any text transformation
+  document.body.classList.add('processing');
+  
+  // Use setTimeout to prevent UI freezing on long text
+  setTimeout(() => {
     try {
-      const transformedText = transforms[activeType](inputText);
-      const outputBox = createOutputBox(transformTitles[activeType], transformedText, activeType);
-      outputContainer.appendChild(outputBox);
-    } catch (error) {
-      console.error(`Error transforming with ${activeType}:`, error);
-      showStatus(`Error transforming text to ${transformTitles[activeType]}`);
+      // Generate outputs based on active type
+      if (activeType === 'all') {
+        Object.keys(transforms).forEach(type => {
+          try {
+            const transformedText = optimizedTransform(inputText, transforms[type]);
+            const outputBox = createOutputBox(transformTitles[type], transformedText, type);
+            outputContainer.appendChild(outputBox);
+          } catch (error) {
+            console.error(`Error transforming with ${type}:`, error);
+            const errorBox = document.createElement('div');
+            errorBox.className = 'output-box';
+            errorBox.innerHTML = `<div class="output-title">${transformTitles[type]} - Error</div>
+                                <div class="output-text">Sorry, this transformation failed.</div>`;
+            outputContainer.appendChild(errorBox);
+          }
+        });
+      } else {
+        try {
+          const transformedText = optimizedTransform(inputText, transforms[activeType]);
+          const outputBox = createOutputBox(transformTitles[activeType], transformedText, activeType);
+          outputContainer.appendChild(outputBox);
+        } catch (error) {
+          console.error(`Error transforming with ${activeType}:`, error);
+          showStatus(`Error transforming text to ${transformTitles[activeType]}`);
+          const errorBox = document.createElement('div');
+          errorBox.className = 'output-box';
+          errorBox.innerHTML = `<div class="output-title">${transformTitles[activeType]} - Error</div>
+                              <div class="output-text">Sorry, this transformation failed.</div>`;
+          outputContainer.appendChild(errorBox);
+        }
+      }
+    } finally {
+      // Hide processing indicator when done
+      document.body.classList.remove('processing');
     }
-  }
+  }, 10);
 }
 
 // Event listeners
+const debouncedGenerateOutputs = debounce((value, type) => {
+  generateOutputs(value, type);
+}, 300);
+
 inputEl.addEventListener('input', () => {
   const activeButton = document.querySelector('.transform-btn.active');
   const activeType = activeButton.dataset.type;
-  generateOutputs(inputEl.value, activeType);
+  debouncedGenerateOutputs(inputEl.value, activeType);
 });
 
 // Button event listeners
@@ -564,6 +727,17 @@ transformButtons.forEach(button => {
       button.click();
     }
   });
+});
+
+// Detect keyboard users to show relevant hints
+window.addEventListener('keydown', function(e) {
+  if (e.key === 'Tab') {
+    document.body.classList.add('keyboard-user');
+  }
+});
+
+window.addEventListener('mousedown', function() {
+  document.body.classList.remove('keyboard-user');
 });
 
 // Initialize with placeholder text
