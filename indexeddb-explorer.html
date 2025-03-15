@@ -1,0 +1,2444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IndexedDB Explorer</title>
+  <style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    color: #333;
+    background-color: #f5f5f7;
+  }
+
+  header {
+    background-color: #2c3e50;
+    color: white;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 1.5rem;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
+  }
+
+  .card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid #e1e1e1;
+    margin-bottom: 1.5rem;
+    overflow-x: auto;
+  }
+
+  .tab {
+    padding: 0.75rem 1.25rem;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .tab.active {
+    border-bottom-color: #2c3e50;
+    color: #2c3e50;
+  }
+
+  .tab-content {
+    display: none;
+  }
+
+  .tab-content.active {
+    display: block;
+  }
+
+  /* Forms */
+  input, select, textarea, button {
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+  }
+
+  button {
+    background-color: #2c3e50;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  button:hover {
+    background-color: #1a252f;
+  }
+
+  button.secondary {
+    background-color: #95a5a6;
+  }
+
+  button.secondary:hover {
+    background-color: #7f8c8d;
+  }
+
+  /* Database Selection */
+  .database-list {
+    margin-bottom: 1.5rem;
+  }
+
+  .database-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    border: 1px solid #e1e1e1;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+  }
+
+  .database-item:hover {
+    background-color: #f9f9f9;
+  }
+
+  /* Structure View */
+  .structure-container {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .object-store {
+    border: 1px solid #e1e1e1;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+  }
+
+  .object-store-header {
+    background-color: #f5f5f7;
+    padding: 0.75rem;
+    font-weight: 500;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  .object-store-content {
+    padding: 0.75rem;
+  }
+
+  .index-list {
+    margin-left: 1.5rem;
+  }
+
+  /* Content View */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #e1e1e1;
+  }
+
+  .data-table th {
+    background-color: #f5f5f7;
+    font-weight: 500;
+  }
+
+  /* Query Builder */
+  .query-builder {
+    margin-bottom: 1.5rem;
+  }
+
+  .filter-row {
+    display: flex;
+    margin-bottom: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .filter-row > * {
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Analytics */
+  .chart-container {
+    height: 300px;
+    margin-bottom: 1.5rem;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .filter-row {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .filter-row > * {
+      width: 100%;
+      margin-right: 0;
+    }
+    
+    .object-store-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .object-store-header button {
+      margin-top: 0.5rem;
+    }
+  }
+
+  /* Visualization */
+  .relationship-diagram {
+    overflow: auto;
+    padding: 1rem;
+    border: 1px solid #e1e1e1;
+    border-radius: 4px;
+    min-height: 300px;
+  }
+
+  .diagram-box {
+    padding: 1rem;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin: 0.5rem;
+    display: inline-block;
+  }
+
+  .diagram-connection {
+    background-color: #ddd;
+    height: 2px;
+    position: absolute;
+  }
+
+  /* Import/Export */
+  .import-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .import-option {
+    flex: 1;
+    min-width: 250px;
+    padding: 1rem;
+    border: 1px solid #e1e1e1;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .import-option:hover {
+    border-color: #2c3e50;
+  }
+
+  .drag-drop-area {
+    border: 2px dashed #ddd;
+    border-radius: 4px;
+    padding: 2rem;
+    text-align: center;
+    transition: border-color 0.2s, background-color 0.2s;
+  }
+
+  .drag-drop-area.drag-over {
+    border-color: #2c3e50;
+    background-color: rgba(44, 62, 80, 0.05);
+  }
+
+  /* Loading Indicator */
+  .loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    border-top-color: #2c3e50;
+    border-radius: 50%;
+    animation: loading 0.8s linear infinite;
+  }
+
+  @keyframes loading {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Search and Filter */
+  .search-bar {
+    margin-bottom: 1rem;
+    display: flex;
+  }
+
+  .search-bar input {
+    flex: 1;
+    margin-bottom: 0;
+  }
+
+  .search-bar button {
+    margin-left: 0.5rem;
+    margin-bottom: 0;
+  }
+
+  /* Database Creation */
+  .creation-form {
+    margin-bottom: 1.5rem;
+  }
+
+  .field-row {
+    display: flex;
+    margin-bottom: 0.5rem;
+    align-items: center;
+  }
+
+  .field-row label {
+    width: 150px;
+    margin-right: 1rem;
+  }
+
+  .add-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  /* Database Size Analytics */
+  .size-bar {
+    height: 24px;
+    background-color: #e1e1e1;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+  }
+
+  .size-fill {
+    height: 100%;
+    background-color: #2c3e50;
+  }
+
+  .size-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+  }
+
+  /* Toast Notifications */
+  .toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+  }
+
+  .toast {
+    background-color: #2c3e50;
+    color: white;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    transform: translateY(20px);
+    animation: toast-in 0.3s forwards;
+  }
+
+  .toast.error {
+    background-color: #e74c3c;
+  }
+
+  @keyframes toast-in {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>IndexedDB Explorer</h1>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <div class="database-controls">
+        <div class="db-selector">
+          <label for="database-select">Select Database:</label>
+          <select id="database-select">
+            <option value="">-- Select a database --</option>
+          </select>
+          <button id="refresh-databases">Refresh</button>
+          <button id="create-database">Create New Database</button>
+        </div>
+        <div id="database-info" class="database-info" style="display: none;">
+          <h3 id="current-db-name"></h3>
+          <p id="current-db-version"></p>
+        </div>
+      </div>
+    </div>
+
+    <div id="main-content" style="display: none;">
+      <div class="tabs">
+        <div class="tab active" data-tab="structure">Structure</div>
+        <div class="tab" data-tab="content">Content</div>
+        <div class="tab" data-tab="queries">Queries</div>
+        <div class="tab" data-tab="import-export">Import/Export</div>
+        <div class="tab" data-tab="analytics">Analytics</div>
+      </div>
+
+      <div class="tab-content active" id="structure">
+        <div class="card">
+          <h2>Database Structure</h2>
+          <div id="object-stores-container" class="structure-container"></div>
+          <div id="structure-diagram" class="relationship-diagram"></div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="content">
+        <div class="card">
+          <h2>Database Content</h2>
+          <div class="object-store-selector">
+            <label for="content-object-store">Select Object Store:</label>
+            <select id="content-object-store"></select>
+          </div>
+          <div class="search-bar">
+            <input type="text" id="content-search" placeholder="Search...">
+            <button id="content-search-btn">Search</button>
+            <button id="content-clear-btn" class="secondary">Clear</button>
+          </div>
+          <div id="data-container">
+            <table class="data-table" id="data-table">
+              <thead>
+                <tr>
+                  <th>Key</th>
+                  <th>Value</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="data-table-body"></tbody>
+            </table>
+            <div id="pagination">
+              <button id="prev-page" disabled>Previous</button>
+              <span id="page-info">Page 1</span>
+              <button id="next-page">Next</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="queries">
+        <div class="card">
+          <h2>Query Builder</h2>
+          <div class="object-store-selector">
+            <label for="query-object-store">Select Object Store:</label>
+            <select id="query-object-store"></select>
+            <label for="query-index">Index (optional):</label>
+            <select id="query-index">
+              <option value="">Primary Key</option>
+            </select>
+          </div>
+
+          <div class="query-builder">
+            <h3>Filters</h3>
+            <div id="filter-container">
+              <div class="filter-row">
+                <select class="filter-field">
+                  <option value="">Select field</option>
+                </select>
+                <select class="filter-operator">
+                  <option value="eq">equals</option>
+                  <option value="neq">not equals</option>
+                  <option value="gt">greater than</option>
+                  <option value="gte">greater than or equal</option>
+                  <option value="lt">less than</option>
+                  <option value="lte">less than or equal</option>
+                  <option value="contains">contains</option>
+                  <option value="startswith">starts with</option>
+                  <option value="endswith">ends with</option>
+                </select>
+                <input type="text" class="filter-value" placeholder="Value">
+                <button class="remove-filter secondary">Remove</button>
+              </div>
+            </div>
+            <button id="add-filter" class="add-button">+ Add Filter</button>
+          </div>
+
+          <div class="query-actions">
+            <button id="run-query">Run Query</button>
+            <button id="clear-query" class="secondary">Clear</button>
+          </div>
+
+          <div id="query-results">
+            <h3>Results</h3>
+            <div id="query-count"></div>
+            <table class="data-table" id="query-table">
+              <thead>
+                <tr>
+                  <th>Key</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody id="query-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="import-export">
+        <div class="card">
+          <h2>Import Data</h2>
+          <div class="import-options">
+            <div class="import-option" id="import-json">
+              <h3>JSON</h3>
+              <p>Import data from a JSON file</p>
+            </div>
+            <div class="import-option" id="import-csv">
+              <h3>CSV</h3>
+              <p>Import data from a CSV file</p>
+            </div>
+            <div class="import-option" id="import-sql">
+              <h3>SQL</h3>
+              <p>Import data from an SQL dump</p>
+            </div>
+          </div>
+          <div class="drag-drop-area" id="drag-drop-area">
+            <p>Drag and drop your file here or</p>
+            <input type="file" id="file-input" style="display: none;">
+            <button id="file-select-button">Select File</button>
+          </div>
+          <div class="object-store-selector">
+            <label for="import-object-store">Import to Object Store:</label>
+            <select id="import-object-store"></select>
+            <div class="import-options">
+              <label>
+                <input type="checkbox" id="clear-before-import">
+                Clear existing data before import
+              </label>
+            </div>
+            <button id="start-import" disabled>Import Data</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Export Data</h2>
+          <div class="object-store-selector">
+            <label for="export-object-store">Export from Object Store:</label>
+            <select id="export-object-store"></select>
+          </div>
+          <div class="export-options">
+            <h3>Export Format</h3>
+            <div>
+              <label>
+                <input type="radio" name="export-format" value="json" checked>
+                JSON
+              </label>
+              <label>
+                <input type="radio" name="export-format" value="csv">
+                CSV
+              </label>
+              <label>
+                <input type="radio" name="export-format" value="sql">
+                SQL
+              </label>
+            </div>
+            <button id="export-data">Export Data</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="analytics">
+        <div class="card">
+          <h2>Storage Analytics</h2>
+          <div id="storage-usage">
+            <h3>Database Size</h3>
+            <div id="storage-chart" class="chart-container"></div>
+            <div class="size-bar">
+              <div class="size-fill" id="storage-bar" style="width: 0%;"></div>
+            </div>
+            <div class="size-label">
+              <span id="storage-used">0 KB</span>
+              <span id="storage-limit">Storage Quota: Calculating...</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Object Store Analytics</h2>
+          <div id="object-store-analytics"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create Database Modal -->
+    <div id="create-db-modal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Create New Database</h2>
+        <div class="creation-form">
+          <div class="field-row">
+            <label for="new-db-name">Database Name:</label>
+            <input type="text" id="new-db-name" required>
+          </div>
+          <div class="field-row">
+            <label for="new-db-version">Version:</label>
+            <input type="number" id="new-db-version" value="1" min="1" required>
+          </div>
+
+          <h3>Object Stores</h3>
+          <div id="object-store-list">
+            <div class="object-store-entry">
+              <div class="field-row">
+                <label for="store-name-0">Name:</label>
+                <input type="text" id="store-name-0" required>
+              </div>
+              <div class="field-row">
+                <label for="store-key-path-0">Key Path:</label>
+                <input type="text" id="store-key-path-0" placeholder="e.g., id">
+              </div>
+              <div class="field-row">
+                <label for="store-auto-increment-0">Auto Increment:</label>
+                <input type="checkbox" id="store-auto-increment-0">
+              </div>
+
+              <h4>Indexes</h4>
+              <div class="indexes-list" id="indexes-list-0">
+                <!-- Indexes will be added here -->
+              </div>
+              <button class="add-index" data-store-index="0">+ Add Index</button>
+            </div>
+          </div>
+          <button id="add-object-store" class="add-button">+ Add Object Store</button>
+
+          <div class="form-actions">
+            <button id="create-db-submit">Create Database</button>
+            <button id="create-db-cancel" class="secondary">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+  </div>
+
+<script type="module">
+// IndexedDB Explorer - Main Application
+
+// Global state
+const state = {
+  databases: [],
+  currentDB: null,
+  currentObjectStore: null,
+  objectStores: [],
+  currentPage: 1,
+  itemsPerPage: 20,
+  importFile: null,
+  importType: null
+};
+
+// Initialize the application
+document.addEventListener('DOMContentLoaded', () => {
+  // Initialize UI components
+  initializeTabs();
+  initializeDatabaseControls();
+  initializeEventListeners();
+  
+  // Load available databases
+  loadDatabases();
+});
+
+// Initialize tab navigation
+function initializeTabs() {
+  const tabs = document.querySelectorAll('.tab');
+  
+  tabs.forEach(tab => {
+    tab.addEventListener('click', function() {
+      const tabId = this.getAttribute('data-tab');
+      
+      // Remove active class from all tabs and content
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      
+      // Add active class to clicked tab and corresponding content
+      this.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+    });
+  });
+}
+
+// Initialize database selection and control buttons
+function initializeDatabaseControls() {
+  const databaseSelect = document.getElementById('database-select');
+  const refreshButton = document.getElementById('refresh-databases');
+  const createDatabaseButton = document.getElementById('create-database');
+  
+  databaseSelect.addEventListener('change', function() {
+    const dbName = this.value;
+    if (dbName) {
+      openDatabase(dbName);
+    } else {
+      closeCurrentDatabase();
+    }
+  });
+  
+  refreshButton.addEventListener('click', loadDatabases);
+  createDatabaseButton.addEventListener('click', showCreateDatabaseModal);
+}
+
+// Load available databases
+async function loadDatabases() {
+  try {
+    // Get all database names using indexedDB.databases() if available
+    // This is a newer API and may not be available in all browsers
+    if ('databases' in indexedDB) {
+      const databases = await indexedDB.databases();
+      updateDatabaseList(databases);
+    } else {
+      // Fallback for browsers that don't support indexedDB.databases()
+      // This is less reliable but provides some functionality
+      showToast('Your browser does not fully support database discovery. Some databases may not be listed.', 'warning');
+      
+      // Try to open common databases or a test database to detect availability
+      detectDatabases();
+    }
+  } catch (error) {
+    console.error('Error loading databases:', error);
+    showToast('Failed to load databases: ' + error.message, 'error');
+  }
+}
+
+// Fallback method to detect databases when indexedDB.databases() is not available
+function detectDatabases() {
+  // This is a limited workaround - in production, you would maintain
+  // a list of known database names in localStorage or similar
+  const knownDatabaseNames = [];
+  
+  // Try to retrieve known database names from localStorage
+  try {
+    const savedNames = localStorage.getItem('indexeddb-explorer-known-dbs');
+    if (savedNames) {
+      knownDatabaseNames.push(...JSON.parse(savedNames));
+    }
+  } catch (e) {
+    console.error('Error retrieving known database names:', e);
+  }
+  
+  // Format the known databases into the expected structure
+  const databases = knownDatabaseNames.map(name => ({
+    name: name,
+    version: undefined // Version will be determined when opening
+  }));
+  
+  updateDatabaseList(databases);
+}
+
+// Update the database selection dropdown
+function updateDatabaseList(databases) {
+  state.databases = databases;
+  
+  const databaseSelect = document.getElementById('database-select');
+  
+  // Save current selection
+  const currentSelection = databaseSelect.value;
+  
+  // Clear existing options except the default
+  while (databaseSelect.options.length > 1) {
+    databaseSelect.remove(1);
+  }
+  
+  // Add database options
+  databases.forEach(db => {
+    const option = document.createElement('option');
+    option.value = db.name;
+    option.textContent = `${db.name}${db.version ? ` (v${db.version})` : ''}`;
+    databaseSelect.appendChild(option);
+  });
+  
+  // Restore selection if possible
+  if (currentSelection && databases.some(db => db.name === currentSelection)) {
+    databaseSelect.value = currentSelection;
+  }
+}
+
+// Open a database
+function openDatabase(dbName) {
+  // Close current database if open
+  if (state.currentDB) {
+    state.currentDB.close();
+    state.currentDB = null;
+  }
+  
+  const dbOpenRequest = indexedDB.open(dbName);
+  
+  dbOpenRequest.onerror = function(event) {
+    console.error('Error opening database:', event.target.error);
+    showToast(`Failed to open database: ${event.target.error.message}`, 'error');
+  };
+  
+  dbOpenRequest.onsuccess = function(event) {
+    state.currentDB = event.target.result;
+    
+    // Update UI with database info
+    document.getElementById('current-db-name').textContent = state.currentDB.name;
+    document.getElementById('current-db-version').textContent = `Version: ${state.currentDB.version}`;
+    document.getElementById('database-info').style.display = 'block';
+    document.getElementById('main-content').style.display = 'block';
+    
+    // Load database structure
+    loadDatabaseStructure();
+    
+    // Add to known databases in localStorage
+    saveKnownDatabase(dbName);
+    
+    showToast(`Database "${dbName}" opened successfully`);
+  };
+  
+  dbOpenRequest.onupgradeneeded = function(event) {
+    // This shouldn't normally happen when just opening an existing database
+    // But handle it gracefully
+    console.log('Database upgrade needed:', event);
+  };
+}
+
+// Save a database name to localStorage for future discovery
+function saveKnownDatabase(dbName) {
+  try {
+    let knownDbs = [];
+    const savedDbs = localStorage.getItem('indexeddb-explorer-known-dbs');
+    
+    if (savedDbs) {
+      knownDbs = JSON.parse(savedDbs);
+    }
+    
+    if (!knownDbs.includes(dbName)) {
+      knownDbs.push(dbName);
+      localStorage.setItem('indexeddb-explorer-known-dbs', JSON.stringify(knownDbs));
+    }
+  } catch (e) {
+    console.error('Error saving known database:', e);
+  }
+}
+
+// Close the current database
+function closeCurrentDatabase() {
+  if (state.currentDB) {
+    state.currentDB.close();
+    state.currentDB = null;
+  }
+  
+  // Reset UI
+  document.getElementById('database-info').style.display = 'none';
+  document.getElementById('main-content').style.display = 'none';
+  document.getElementById('object-stores-container').innerHTML = '';
+  
+  // Reset state
+  state.objectStores = [];
+  state.currentObjectStore = null;
+}
+
+// Load database structure (object stores and indexes)
+function loadDatabaseStructure() {
+  if (!state.currentDB) return;
+  
+  const db = state.currentDB;
+  const objectStoreNames = Array.from(db.objectStoreNames);
+  state.objectStores = objectStoreNames;
+  
+  // Update object store selectors across tabs
+  updateObjectStoreSelectors();
+  
+  // Build structure view
+  buildStructureView(objectStoreNames);
+  
+  // Create database diagram
+  createDatabaseDiagram(objectStoreNames);
+  
+  // Load analytics
+  loadDatabaseAnalytics();
+  
+  // Select first object store for content view if available
+  if (objectStoreNames.length > 0) {
+    const contentObjectStoreSelect = document.getElementById('content-object-store');
+    if (contentObjectStoreSelect.options.length > 0) {
+      contentObjectStoreSelect.selectedIndex = 0;
+      state.currentObjectStore = contentObjectStoreSelect.value;
+      loadObjectStoreData(state.currentObjectStore);
+    }
+  }
+}
+
+// Update all object store select elements
+function updateObjectStoreSelectors() {
+  const selectors = [
+    'content-object-store',
+    'query-object-store',
+    'import-object-store',
+    'export-object-store'
+  ];
+  
+  selectors.forEach(selectorId => {
+    const select = document.getElementById(selectorId);
+    select.innerHTML = '';
+    
+    state.objectStores.forEach(storeName => {
+      const option = document.createElement('option');
+      option.value = storeName;
+      option.textContent = storeName;
+      select.appendChild(option);
+    });
+    
+    // Add event listener to content object store selector
+    if (selectorId === 'content-object-store') {
+      select.addEventListener('change', function() {
+        state.currentObjectStore = this.value;
+        state.currentPage = 1;
+        loadObjectStoreData(state.currentObjectStore);
+      });
+    }
+    
+    // Add event listener to query object store selector
+    if (selectorId === 'query-object-store') {
+      select.addEventListener('change', function() {
+        updateQueryIndexes(this.value);
+      });
+    }
+  });
+  
+  // Initialize query indexes for first object store if available
+  if (state.objectStores.length > 0) {
+    updateQueryIndexes(state.objectStores[0]);
+  }
+}
+
+// Update query indexes based on selected object store
+function updateQueryIndexes(objectStoreName) {
+  if (!state.currentDB) return;
+  
+  const indexSelect = document.getElementById('query-index');
+  indexSelect.innerHTML = '<option value="">Primary Key</option>';
+  
+  const transaction = state.currentDB.transaction(objectStoreName, 'readonly');
+  const objectStore = transaction.objectStore(objectStoreName);
+  const indexNames = Array.from(objectStore.indexNames);
+  
+  indexNames.forEach(indexName => {
+    const option = document.createElement('option');
+    option.value = indexName;
+    option.textContent = indexName;
+    indexSelect.appendChild(option);
+  });
+  
+  // Update filter fields in query builder
+  updateQueryFilterFields(objectStoreName);
+}
+
+// Update filter fields in query builder based on object store structure
+function updateQueryFilterFields(objectStoreName) {
+  if (!state.currentDB) return;
+  
+  // Get filter field selectors
+  const filterFieldSelects = document.querySelectorAll('.filter-field');
+  
+  // Sample a record to get field names
+  const transaction = state.currentDB.transaction(objectStoreName, 'readonly');
+  const objectStore = transaction.objectStore(objectStoreName);
+  const request = objectStore.openCursor();
+  
+  request.onsuccess = function(event) {
+    const cursor = event.target.result;
+    let fields = [];
+    
+    if (cursor) {
+      // Get fields from a sample record
+      fields = Object.keys(cursor.value);
+      fields.sort();
+    }
+    
+    // Add key path to the beginning
+    const keyPath = objectStore.keyPath;
+    if (keyPath && !fields.includes(keyPath)) {
+      fields.unshift(keyPath);
+    }
+    
+    // Update each filter field selector
+    filterFieldSelects.forEach(select => {
+      const currentValue = select.value;
+      select.innerHTML = '<option value="">Select field</option>';
+      
+      fields.forEach(field => {
+        const option = document.createElement('option');
+        option.value = field;
+        option.textContent = field;
+        select.appendChild(option);
+      });
+      
+      // Restore previous selection if possible
+      if (currentValue && fields.includes(currentValue)) {
+        select.value = currentValue;
+      }
+    });
+  };
+  
+  request.onerror = function(event) {
+    console.error('Error getting fields:', event.target.error);
+    showToast('Failed to load fields for query builder', 'error');
+  };
+}
+
+// Build the structure view with object stores and indexes
+function buildStructureView(objectStoreNames) {
+  const container = document.getElementById('object-stores-container');
+  container.innerHTML = '';
+  
+  if (objectStoreNames.length === 0) {
+    container.innerHTML = '<p>No object stores found in this database.</p>';
+    return;
+  }
+  
+  objectStoreNames.forEach(storeName => {
+    const storeDiv = document.createElement('div');
+    storeDiv.className = 'object-store';
+    
+    const headerDiv = document.createElement('div');
+    headerDiv.className = 'object-store-header';
+    headerDiv.textContent = storeName;
+    headerDiv.addEventListener('click', function() {
+      this.parentNode.querySelector('.object-store-content').classList.toggle('hidden');
+    });
+    
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'object-store-content';
+    
+    // Get object store info
+    const transaction = state.currentDB.transaction(storeName, 'readonly');
+    const objectStore = transaction.objectStore(storeName);
+    
+    // Show key path info
+    const keyPathInfo = document.createElement('p');
+    keyPathInfo.innerHTML = `<strong>Key Path:</strong> ${objectStore.keyPath || 'None (out-of-line keys)'}`;
+    contentDiv.appendChild(keyPathInfo);
+    
+    // Show auto increment info
+    const autoIncrementInfo = document.createElement('p');
+    autoIncrementInfo.innerHTML = `<strong>Auto Increment:</strong> ${objectStore.autoIncrement ? 'Yes' : 'No'}`;
+    contentDiv.appendChild(autoIncrementInfo);
+    
+    // Show indexes
+    const indexesTitle = document.createElement('h4');
+    indexesTitle.textContent = 'Indexes';
+    contentDiv.appendChild(indexesTitle);
+    
+    const indexList = document.createElement('div');
+    indexList.className = 'index-list';
+    
+    if (objectStore.indexNames.length === 0) {
+      const noIndexesMsg = document.createElement('p');
+      noIndexesMsg.textContent = 'No indexes defined for this object store.';
+      indexList.appendChild(noIndexesMsg);
+    } else {
+      const indexNames = Array.from(objectStore.indexNames);
+      indexNames.forEach(indexName => {
+        const index = objectStore.index(indexName);
+        const indexInfo = document.createElement('div');
+        indexInfo.className = 'index-info';
+        indexInfo.innerHTML = `
+          <p><strong>${indexName}</strong></p>
+          <p>Key Path: ${index.keyPath}</p>
+          <p>Unique: ${index.unique ? 'Yes' : 'No'}</p>
+          <p>Multi-entry: ${index.multiEntry ? 'Yes' : 'No'}</p>
+        `;
+        indexList.appendChild(indexInfo);
+      });
+    }
+    
+    contentDiv.appendChild(indexList);
+    
+    storeDiv.appendChild(headerDiv);
+    storeDiv.appendChild(contentDiv);
+    container.appendChild(storeDiv);
+  });
+}
+
+// Create a visual database diagram
+function createDatabaseDiagram(objectStoreNames) {
+  const container = document.getElementById('structure-diagram');
+  container.innerHTML = '';
+  
+  if (objectStoreNames.length === 0) {
+    container.innerHTML = '<p>No object stores to visualize.</p>';
+    return;
+  }
+  
+  // Create object store boxes
+  objectStoreNames.forEach((storeName, index) => {
+    const storeBox = document.createElement('div');
+    storeBox.className = 'diagram-box';
+    storeBox.id = `diagram-store-${index}`;
+    storeBox.style.position = 'relative';
+    
+    const transaction = state.currentDB.transaction(storeName, 'readonly');
+    const objectStore = transaction.objectStore(storeName);
+    
+    // Basic store info
+    let storeHTML = `<h4>${storeName}</h4>`;
+    storeHTML += `<p>Key: ${objectStore.keyPath || 'Out-of-line'}</p>`;
+    
+    // Add indexes
+    const indexNames = Array.from(objectStore.indexNames);
+    if (indexNames.length > 0) {
+      storeHTML += '<p><strong>Indexes:</strong></p>';
+      storeHTML += '<ul>';
+      indexNames.forEach(indexName => {
+        storeHTML += `<li>${indexName}</li>`;
+      });
+      storeHTML += '</ul>';
+    }
+    
+    storeBox.innerHTML = storeHTML;
+    container.appendChild(storeBox);
+  });
+  
+  // Position boxes in a simple layout
+  // In a more complex implementation, you would use a proper graph layout algorithm
+  const boxWidth = 200;
+  const boxHeight = 150;
+  const boxesPerRow = 3;
+  const horizontalGap = 50;
+  const verticalGap = 100;
+  
+  objectStoreNames.forEach((_, index) => {
+    const box = document.getElementById(`diagram-store-${index}`);
+    const row = Math.floor(index / boxesPerRow);
+    const col = index % boxesPerRow;
+    
+    box.style.position = 'absolute';
+    box.style.left = `${col * (boxWidth + horizontalGap)}px`;
+    box.style.top = `${row * (boxHeight + verticalGap)}px`;
+    box.style.width = `${boxWidth}px`;
+    box.style.minHeight = `${boxHeight}px`;
+  });
+  
+  // Set container height based on layout
+  const rows = Math.ceil(objectStoreNames.length / boxesPerRow);
+  container.style.height = `${rows * (boxHeight + verticalGap) + 50}px`;
+}
+
+// Load object store data for the content view
+function loadObjectStoreData(objectStoreName, searchTerm = '') {
+  if (!state.currentDB || !objectStoreName) return;
+  
+  const tableBody = document.getElementById('data-table-body');
+  tableBody.innerHTML = '<tr><td colspan="3">Loading data...</td></tr>';
+  
+  const transaction = state.currentDB.transaction(objectStoreName, 'readonly');
+  const objectStore = transaction.objectStore(objectStoreName);
+  
+  // Use pagination to display data
+  const start = (state.currentPage - 1) * state.itemsPerPage;
+  let count = 0;
+  let displayedCount = 0;
+  let totalCount = 0;
+  
+  const request = objectStore.openCursor();
+  tableBody.innerHTML = '';
+  
+  request.onsuccess = function(event) {
+    const cursor = event.target.result;
+    
+    if (cursor) {
+      totalCount++;
+      
+      // Handle search filtering
+      let includeRecord = true;
+      if (searchTerm) {
+        includeRecord = objectContainsSearchTerm(cursor.value, searchTerm);
+      }
+      
+      if (includeRecord) {
+        count++;
+        
+        // Pagination
+        if (count > start && displayedCount < state.itemsPerPage) {
+          displayedCount++;
+          
+          const row = document.createElement('tr');
+          
+          // Key cell
+          const keyCell = document.createElement('td');
+          keyCell.textContent = formatValue(cursor.key);
+          row.appendChild(keyCell);
+          
+          // Value cell
+          const valueCell = document.createElement('td');
+          valueCell.textContent = formatValue(cursor.value);
+          row.appendChild(valueCell);
+          
+          // Actions cell
+          const actionsCell = document.createElement('td');
+          
+          // Edit button
+          const editButton = document.createElement('button');
+          editButton.textContent = 'Edit';
+          editButton.addEventListener('click', () => editRecord(objectStoreName, cursor.key, cursor.value));
+          actionsCell.appendChild(editButton);
+          
+          // Delete button
+          const deleteButton = document.createElement('button');
+          deleteButton.textContent = 'Delete';
+          deleteButton.className = 'secondary';
+          deleteButton.addEventListener('click', () => deleteRecord(objectStoreName, cursor.key));
+          actionsCell.appendChild(deleteButton);
+          
+          row.appendChild(actionsCell);
+          tableBody.appendChild(row);
+        }
+      }
+      
+      cursor.continue();
+    } else {
+      // No more results
+      if (tableBody.children.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="3">No records found</td></tr>';
+      }
+      
+      // Update pagination
+      updatePagination(count);
+    }
+  };
+  
+  request.onerror = function(event) {
+    console.error('Error loading data:', event.target.error);
+    tableBody.innerHTML = `<tr><td colspan="3">Error: ${event.target.error.message}</td></tr>`;
+  };
+}
+
+// Check if an object contains the search term
+function objectContainsSearchTerm(obj, term) {
+  if (!term) return true;
+  
+  const termLower = term.toLowerCase();
+  
+  // Check if the object itself contains the term
+  const objString = JSON.stringify(obj).toLowerCase();
+  if (objString.includes(termLower)) return true;
+  
+  // Recursively check nested objects
+  for (const key in obj) {
+    if (typeof obj[key] === 'object' && obj[key] !== null) {
+      if (objectContainsSearchTerm(obj[key], term)) return true;
+    } else {
+      const valueString = String(obj[key]).toLowerCase();
+      if (valueString.includes(termLower)) return true;
+    }
+  }
+  
+  return false;
+}
+
+// Format a value for display
+function formatValue(value) {
+  if (value === null || value === undefined) {
+    return String(value);
+  }
+  
+  if (typeof value === 'object') {
+    return JSON.stringify(value);
+  }
+  
+  return String(value);
+}
+
+// Update pagination controls
+function updatePagination(totalCount) {
+  const prevButton = document.getElementById('prev-page');
+  const nextButton = document.getElementById('next-page');
+  const pageInfo = document.getElementById('page-info');
+  
+  const totalPages = Math.ceil(totalCount / state.itemsPerPage);
+  pageInfo.textContent = `Page ${state.currentPage} of ${totalPages}`;
+  
+  prevButton.disabled = state.currentPage <= 1;
+  nextButton.disabled = state.currentPage >= totalPages;
+}
+
+// Show edit record form
+function editRecord(objectStoreName, key, value) {
+  // This would typically open a modal with a form
+  // For simplicity, we'll use a prompt for now
+  const valueString = JSON.stringify(value, null, 2);
+  const newValueString = prompt('Edit record (JSON format):', valueString);
+  
+  if (newValueString === null) return; // User cancelled
+  
+  try {
+    const newValue = JSON.parse(newValueString);
+    
+    // Update record
+    const transaction = state.currentDB.transaction(objectStoreName, 'readwrite');
+    const objectStore = transaction.objectStore(objectStoreName);
+    
+    const request = objectStore.put(newValue, key);
+    
+    request.onsuccess = function() {
+      showToast('Record updated successfully');
+      loadObjectStoreData(objectStoreName);
+    };
+    
+    request.onerror = function(event) {
+      console.error('Error updating record:', event.target.error);
+      showToast(`Failed to update record: ${event.target.error.message}`, 'error');
+    };
+  } catch (e) {
+    showToast(`Invalid JSON format: ${e.message}`, 'error');
+  }
+}
+
+// Delete a record
+function deleteRecord(objectStoreName, key) {
+  if (!confirm('Are you sure you want to delete this record?')) return;
+  
+  const transaction = state.currentDB.transaction(objectStoreName, 'readwrite');
+  const objectStore = transaction.objectStore(objectStoreName);
+  
+  const request = objectStore.delete(key);
+  
+  request.onsuccess = function() {
+    showToast('Record deleted successfully');
+    loadObjectStoreData(objectStoreName);
+  };
+  
+  request.onerror = function(event) {
+    console.error('Error deleting record:', event.target.error);
+    showToast(`Failed to delete record: ${event.target.error.message}`, 'error');
+  };
+}
+
+// Initialize all event listeners
+function initializeEventListeners() {
+  // Pagination controls
+  document.getElementById('prev-page').addEventListener('click', function() {
+    if (state.currentPage > 1) {
+      state.currentPage--;
+      loadObjectStoreData(state.currentObjectStore);
+    }
+  });
+  
+  document.getElementById('next-page').addEventListener('click', function() {
+    state.currentPage++;
+    loadObjectStoreData(state.currentObjectStore);
+  });
+  
+  // Search controls
+  document.getElementById('content-search-btn').addEventListener('click', function() {
+    const searchTerm = document.getElementById('content-search').value;
+    state.currentPage = 1;
+    loadObjectStoreData(state.currentObjectStore, searchTerm);
+  });
+  
+  document.getElementById('content-clear-btn').addEventListener('click', function() {
+    document.getElementById('content-search').value = '';
+    state.currentPage = 1;
+    loadObjectStoreData(state.currentObjectStore);
+  });
+  
+  // Query controls
+  document.getElementById('add-filter').addEventListener('click', addQueryFilter);
+  document.getElementById('run-query').addEventListener('click', runQuery);
+  document.getElementById('clear-query').addEventListener('click', clearQuery);
+  
+  // Import/Export controls
+  document.getElementById('file-select-button').addEventListener('click', function() {
+    document.getElementById('file-input').click();
+  });
+  
+  document.getElementById('file-input').addEventListener('change', handleFileSelect);
+  
+  document.getElementById('import-json').addEventListener('click', () => {
+    state.importType = 'json';
+    document.getElementById('file-input').click();
+  });
+  
+  document.getElementById('import-csv').addEventListener('click', () => {
+    state.importType = 'csv';
+    document.getElementById('file-input').click();
+  });
+  
+  document.getElementById('import-sql').addEventListener('click', () => {
+    state.importType = 'sql';
+    document.getElementById('file-input').click();
+  });
+  
+  document.getElementById('start-import').addEventListener('click', startImport);
+  document.getElementById('export-data').addEventListener('click', exportData);
+  
+  // Drag and drop for file import
+  const dropArea = document.getElementById('drag-drop-area');
+  
+  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    dropArea.addEventListener(eventName, preventDefaults, false);
+  });
+  
+  function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  
+  ['dragenter', 'dragover'].forEach(eventName => {
+    dropArea.addEventListener(eventName, () => {
+      dropArea.classList.add('drag-over');
+    }, false);
+  });
+  
+  ['dragleave', 'drop'].forEach(eventName => {
+    dropArea.addEventListener(eventName, () => {
+      dropArea.classList.remove('drag-over');
+    }, false);
+  });
+  
+  dropArea.addEventListener('drop', handleDrop, false);
+  
+  // Create database modal controls
+  document.getElementById('create-db-cancel').addEventListener('click', hideCreateDatabaseModal);
+  document.getElementById('create-db-submit').addEventListener('click', createNewDatabase);
+  document.getElementById('add-object-store').addEventListener('click', addObjectStoreToForm);
+  
+  // Close modal when clicking on X or outside the modal
+  const closeButtons = document.querySelectorAll('.close');
+  closeButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      this.closest('.modal').style.display = 'none';
+    });
+  });
+}
+
+// Add a new filter row to the query builder
+function addQueryFilter() {
+  const filterContainer = document.getElementById('filter-container');
+  const newFilterRow = document.createElement('div');
+  newFilterRow.className = 'filter-row';
+  
+  newFilterRow.innerHTML = `
+    <select class="filter-field">
+      <option value="">Select field</option>
+    </select>
+    <select class="filter-operator">
+      <option value="eq">equals</option>
+      <option value="neq">not equals</option>
+      <option value="gt">greater than</option>
+      <option value="gte">greater than or equal</option>
+      <option value="lt">less than</option>
+      <option value="lte">less than or equal</option>
+      <option value="contains">contains</option>
+      <option value="startswith">starts with</option>
+      <option value="endswith">ends with</option>
+    </select>
+    <input type="text" class="filter-value" placeholder="Value">
+    <button class="remove-filter secondary">Remove</button>
+  `;
+  
+  filterContainer.appendChild(newFilterRow);
+  
+  // Add event listener to remove button
+  const removeButton = newFilterRow.querySelector('.remove-filter');
+  removeButton.addEventListener('click', function() {
+    this.closest('.filter-row').remove();
+  });
+  
+  // Populate field options based on current object store
+  const objectStoreName = document.getElementById('query-object-store').value;
+  if (objectStoreName) {
+    updateQueryFilterFields(objectStoreName);
+  }
+}
+
+// Run a query based on the query builder filters
+function runQuery() {
+  const objectStoreName = document.getElementById('query-object-store').value;
+  const indexName = document.getElementById('query-index').value;
+  
+  if (!state.currentDB || !objectStoreName) {
+    showToast('Please select an object store', 'error');
+    return;
+  }
+  
+  // Get all filters
+  const filters = [];
+  const filterRows = document.querySelectorAll('.filter-row');
+  
+  filterRows.forEach(row => {
+    const field = row.querySelector('.filter-field').value;
+    const operator = row.querySelector('.filter-operator').value;
+    const value = row.querySelector('.filter-value').value;
+    
+    if (field && operator) {
+      filters.push({ field, operator, value });
+    }
+  });
+  
+  // Run the query
+  const transaction = state.currentDB.transaction(objectStoreName, 'readonly');
+  const objectStore = transaction.objectStore(objectStoreName);
+  let source = objectStore;
+  
+  // Use index if specified
+  if (indexName) {
+    source = objectStore.index(indexName);
+  }
+  
+  // Get all records and filter in memory
+  // This is a simple approach - for production use, you'd want to
+  // use IDBKeyRange where possible for better performance
+  const results = [];
+  let request;
+  
+  // If no filters, just get everything
+  if (filters.length === 0) {
+    request = source.openCursor();
+  } else {
+    // For simple equals on primary key or index, we can optimize
+    const singleEqualsFilter = filters.length === 1 && 
+                              filters[0].operator === 'eq' && 
+                              (!indexName || filters[0].field === source.keyPath);
+    
+    if (singleEqualsFilter) {
+      // Convert value to appropriate type
+      let keyValue = filters[0].value;
+      try {
+        keyValue = JSON.parse(keyValue);
+      } catch (e) {
+        // Not valid JSON, use as string
+      }
+      
+      request = source.get(keyValue);
+      
+      request.onsuccess = function(event) {
+        const result = event.target.result;
+        if (result) {
+          results.push({
+            key: indexName ? result[source.keyPath] : source.keyPath ? result[source.keyPath] : keyValue,
+            value: result
+          });
+        }
+        displayQueryResults(results);
+      };
+      
+      request.onerror = function(event) {
+        console.error('Error executing query:', event.target.error);
+        showToast(`Query failed: ${event.target.error.message}`, 'error');
+      };
+      
+      return;
+    } else {
+      request = source.openCursor();
+    }
+  }
+  
+  request.onsuccess = function(event) {
+    const cursor = event.target.result;
+    
+    if (cursor) {
+      const record = cursor.value;
+      
+      // Apply filters
+      let includeRecord = true;
+      
+      for (const filter of filters) {
+        if (!evaluateFilter(record, filter)) {
+          includeRecord = false;
+          break;
+        }
+      }
+      
+      if (includeRecord) {
+        results.push({
+          key: cursor.key,
+          value: record
+        });
+      }
+      
+      cursor.continue();
+    } else {
+      // Done iterating
+      displayQueryResults(results);
+    }
+  };
+  
+  request.onerror = function(event) {
+    console.error('Error executing query:', event.target.error);
+    showToast(`Query failed: ${event.target.error.message}`, 'error');
+  };
+}
+
+// Evaluate a single filter against a record
+function evaluateFilter(record, filter) {
+  const { field, operator, value } = filter;
+  
+  // Handle nested fields (e.g., 'address.city')
+  let fieldValue = getNestedValue(record, field);
+  
+  // Convert field value to string for comparison
+  const fieldStr = String(fieldValue).toLowerCase();
+  const valueStr = String(value).toLowerCase();
+  
+  switch (operator) {
+    case 'eq':
+      return fieldStr === valueStr;
+    case 'neq':
+      return fieldStr !== valueStr;
+    case 'gt':
+      return fieldValue > value;
+    case 'gte':
+      return fieldValue >= value;
+    case 'lt':
+      return fieldValue < value;
+    case 'lte':
+      return fieldValue <= value;
+    case 'contains':
+      return fieldStr.includes(valueStr);
+    case 'startswith':
+      return fieldStr.startsWith(valueStr);
+    case 'endswith':
+      return fieldStr.endsWith(valueStr);
+    default:
+      return true;
+  }
+}
+
+// Get a nested value from an object using dot notation
+function getNestedValue(obj, path) {
+  if (!path) return obj;
+  
+  const parts = path.split('.');
+  let current = obj;
+  
+  for (const part of parts) {
+    if (current === null || current === undefined) {
+      return undefined;
+    }
+    current = current[part];
+  }
+  
+  return current;
+}
+
+// Display query results
+function displayQueryResults(results) {
+  const tableBody = document.getElementById('query-table-body');
+  const queryCount = document.getElementById('query-count');
+  
+  tableBody.innerHTML = '';
+  queryCount.textContent = `Found ${results.length} records`;
+  
+  if (results.length === 0) {
+    tableBody.innerHTML = '<tr><td colspan="2">No records match your query</td></tr>';
+    return;
+  }
+  
+  results.forEach(result => {
+    const row = document.createElement('tr');
+    
+    // Key cell
+    const keyCell = document.createElement('td');
+    keyCell.textContent = formatValue(result.key);
+    row.appendChild(keyCell);
+    
+    // Value cell
+    const valueCell = document.createElement('td');
+    valueCell.textContent = formatValue(result.value);
+    row.appendChild(valueCell);
+    
+    tableBody.appendChild(row);
+  });
+}
+
+// Clear the query builder
+function clearQuery() {
+  // Keep only the first filter row and clear its values
+  const filterContainer = document.getElementById('filter-container');
+  
+  while (filterContainer.children.length > 1) {
+    filterContainer.removeChild(filterContainer.lastChild);
+  }
+  
+  const firstRow = filterContainer.firstChild;
+  firstRow.querySelector('.filter-field').value = '';
+  firstRow.querySelector('.filter-operator').value = 'eq';
+  firstRow.querySelector('.filter-value').value = '';
+  
+  // Clear results
+  document.getElementById('query-table-body').innerHTML = '';
+  document.getElementById('query-count').textContent = '';
+}
+
+// Handle file selection for import
+function handleFileSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  state.importFile = file;
+  
+  // Detect file type if not already set
+  if (!state.importType) {
+    const extension = file.name.split('.').pop().toLowerCase();
+    if (extension === 'json') {
+      state.importType = 'json';
+    } else if (extension === 'csv') {
+      state.importType = 'csv';
+    } else if (extension === 'sql') {
+      state.importType = 'sql';
+    } else {
+      showToast('Unknown file type. Please select JSON, CSV, or SQL', 'error');
+      return;
+    }
+  }
+  
+  // Update drag-drop area
+  const dropArea = document.getElementById('drag-drop-area');
+  dropArea.innerHTML = `
+    <p>Selected file: ${file.name} (${formatFileSize(file.size)})</p>
+    <button id="change-file-button">Change File</button>
+  `;
+  
+  document.getElementById('change-file-button').addEventListener('click', function() {
+    document.getElementById('file-input').click();
+  });
+  
+  // Enable import button
+  document.getElementById('start-import').disabled = false;
+}
+
+// Handle file drop
+function handleDrop(event) {
+  const dt = event.dataTransfer;
+  const file = dt.files[0];
+  
+  if (!file) return;
+  
+  // Set the file input value
+  const fileInput = document.getElementById('file-input');
+  
+  // Detect file type
+  const extension = file.name.split('.').pop().toLowerCase();
+  if (extension === 'json') {
+    state.importType = 'json';
+  } else if (extension === 'csv') {
+    state.importType = 'csv';
+  } else if (extension === 'sql') {
+    state.importType = 'sql';
+  } else {
+    showToast('Unknown file type. Please select JSON, CSV, or SQL', 'error');
+    return;
+  }
+  
+  state.importFile = file;
+  
+  // Update drag-drop area
+  const dropArea = document.getElementById('drag-drop-area');
+  dropArea.innerHTML = `
+    <p>Selected file: ${file.name} (${formatFileSize(file.size)})</p>
+    <button id="change-file-button">Change File</button>
+  `;
+  
+  document.getElementById('change-file-button').addEventListener('click', function() {
+    document.getElementById('file-input').click();
+  });
+  
+  // Enable import button
+  document.getElementById('start-import').disabled = false;
+}
+
+// Format file size for display
+function formatFileSize(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Start data import
+function startImport() {
+  if (!state.currentDB || !state.importFile || !state.importType) {
+    showToast('Please select a file to import', 'error');
+    return;
+  }
+  
+  const objectStoreName = document.getElementById('import-object-store').value;
+  const clearBeforeImport = document.getElementById('clear-before-import').checked;
+  
+  const reader = new FileReader();
+  
+  reader.onload = function(event) {
+    const fileContent = event.target.result;
+    
+    try {
+      let dataToImport = [];
+      
+      // Parse the file based on the type
+      switch (state.importType) {
+        case 'json':
+          dataToImport = JSON.parse(fileContent);
+          if (!Array.isArray(dataToImport)) {
+            dataToImport = [dataToImport];
+          }
+          break;
+        case 'csv':
+          dataToImport = parseCSV(fileContent);
+          break;
+        case 'sql':
+          dataToImport = parseSQLDump(fileContent);
+          break;
+      }
+      
+      if (dataToImport.length === 0) {
+        showToast('No data found to import', 'error');
+        return;
+      }
+      
+      // Start the import
+      const transaction = state.currentDB.transaction(objectStoreName, 'readwrite');
+      const objectStore = transaction.objectStore(objectStoreName);
+      
+      // Clear existing data if requested
+      if (clearBeforeImport) {
+        const clearRequest = objectStore.clear();
+        clearRequest.onerror = function(event) {
+          console.error('Error clearing object store:', event.target.error);
+          showToast(`Failed to clear object store: ${event.target.error.message}`, 'error');
+        };
+      }
+      
+      // Add the data
+      let successCount = 0;
+      let errorCount = 0;
+      
+      function importNext(index) {
+        if (index >= dataToImport.length) {
+          // Import complete
+          showToast(`Import complete: ${successCount} records imported, ${errorCount} errors`);
+          // Refresh data view
+          if (state.currentObjectStore === objectStoreName) {
+            loadObjectStoreData(objectStoreName);
+          }
+          return;
+        }
+        
+        const item = dataToImport[index];
+        const request = objectStore.add(item);
+        
+        request.onsuccess = function() {
+          successCount++;
+          importNext(index + 1);
+        };
+        
+        request.onerror = function(event) {
+          console.error('Error importing record:', event.target.error);
+          errorCount++;
+          importNext(index + 1);
+        };
+      }
+      
+      importNext(0);
+    } catch (error) {
+      console.error('Error parsing import file:', error);
+      showToast(`Failed to parse ${state.importType.toUpperCase()} file: ${error.message}`, 'error');
+    }
+  };
+  
+  reader.onerror = function() {
+    console.error('Error reading file');
+    showToast('Failed to read file', 'error');
+  };
+  
+  // Read the file
+  if (state.importType === 'json' || state.importType === 'sql') {
+    reader.readAsText(state.importFile);
+  } else if (state.importType === 'csv') {
+    reader.readAsText(state.importFile);
+  }
+}
+
+// Parse CSV file
+function parseCSV(csvContent) {
+  const lines = csvContent.split('\n');
+  const result = [];
+  
+  // Get headers from first line
+  const headers = lines[0].split(',').map(header => header.trim());
+  
+  // Process data lines
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    
+    const values = line.split(',');
+    const obj = {};
+    
+    for (let j = 0; j < headers.length; j++) {
+      let value = values[j]?.trim();
+      
+      // Try to convert to number or boolean
+      if (value === 'true') {
+        value = true;
+      } else if (value === 'false') {
+        value = false;
+      } else if (!isNaN(value) && value !== '') {
+        value = Number(value);
+      }
+      
+      obj[headers[j]] = value;
+    }
+    
+    result.push(obj);
+  }
+  
+  return result;
+}
+
+// Parse SQL dump (very basic implementation)
+function parseSQLDump(sqlContent) {
+  // This is a very simplified parser for basic SQL INSERT statements
+  // For a production app, you'd want a more robust SQL parser
+  const result = [];
+  
+  // Extract INSERT statements
+  const insertRegex = /INSERT\s+INTO\s+\w+\s*\(([^)]+)\)\s*VALUES\s*\(([^)]+)\)/ig;
+  let match;
+  
+  while ((match = insertRegex.exec(sqlContent)) !== null) {
+    const columns = match[1].split(',').map(col => col.trim());
+    const values = match[2].split(',').map(val => {
+      val = val.trim();
+      
+      // Remove quotes
+      if ((val.startsWith("'") && val.endsWith("'")) || 
+         (val.startsWith('"') && val.endsWith('"'))) {
+        val = val.substring(1, val.length - 1);
+      }
+      
+      // Convert to number or boolean
+      if (val === 'true') {
+        return true;
+      } else if (val === 'false') {
+        return false;
+      } else if (val === 'NULL' || val === 'null') {
+        return null;
+      } else if (!isNaN(val)) {
+        return Number(val);
+      }
+      
+      return val;
+    });
+    
+    const obj = {};
+    for (let i = 0; i < columns.length; i++) {
+      obj[columns[i]] = values[i];
+    }
+    
+    result.push(obj);
+  }
+  
+  return result;
+}
+
+// Export data from an object store
+function exportData() {
+  if (!state.currentDB) {
+    showToast('No database open', 'error');
+    return;
+  }
+  
+  const objectStoreName = document.getElementById('export-object-store').value;
+  const formatRadios = document.getElementsByName('export-format');
+  let exportFormat;
+  
+  for (const radio of formatRadios) {
+    if (radio.checked) {
+      exportFormat = radio.value;
+      break;
+    }
+  }
+  
+  if (!exportFormat) {
+    showToast('Please select an export format', 'error');
+    return;
+  }
+  
+  // Get all data from the object store
+  const transaction = state.currentDB.transaction(objectStoreName, 'readonly');
+  const objectStore = transaction.objectStore(objectStoreName);
+  const request = objectStore.getAll();
+  
+  request.onsuccess = function(event) {
+    const data = event.target.result;
+    
+    if (data.length === 0) {
+      showToast('No data to export', 'warning');
+      return;
+    }
+    
+    let exportContent;
+    let fileName;
+    let mimeType;
+    
+    switch (exportFormat) {
+      case 'json':
+        exportContent = JSON.stringify(data, null, 2);
+        fileName = `${objectStoreName}.json`;
+        mimeType = 'application/json';
+        break;
+      case 'csv':
+        exportContent = convertToCSV(data);
+        fileName = `${objectStoreName}.csv`;
+        mimeType = 'text/csv';
+        break;
+      case 'sql':
+        exportContent = convertToSQL(data, objectStoreName);
+        fileName = `${objectStoreName}.sql`;
+        mimeType = 'application/sql';
+        break;
+    }
+    
+    // Create a download link
+    const blob = new Blob([exportContent], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    
+    // Clean up
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 100);
+    
+    showToast(`Exported ${data.length} records to ${fileName}`);
+  };
+  
+  request.onerror = function(event) {
+    console.error('Error exporting data:', event.target.error);
+    showToast(`Failed to export data: ${event.target.error.message}`, 'error');
+  };
+}
+
+// Convert data to CSV format
+function convertToCSV(data) {
+  if (data.length === 0) return '';
+  
+  // Get all possible headers from all objects
+  const headers = new Set();
+  data.forEach(item => {
+    Object.keys(item).forEach(key => headers.add(key));
+  });
+  
+  const headerRow = Array.from(headers).join(',');
+  const rows = data.map(item => {
+    return Array.from(headers).map(header => {
+      const value = item[header];
+      
+      // Handle different value types
+      if (value === null || value === undefined) {
+        return '';
+      } else if (typeof value === 'object') {
+        return `"${JSON.stringify(value).replace(/"/g, '""')}"`;
+      } else if (typeof value === 'string') {
+        return `"${value.replace(/"/g, '""')}"`;
+      } else {
+        return value;
+      }
+    }).join(',');
+  });
+  
+  return [headerRow, ...rows].join('\n');
+}
+
+// Convert data to SQL INSERT statements
+function convertToSQL(data, tableName) {
+  if (data.length === 0) return '';
+  
+  const insertStatements = data.map(item => {
+    const columns = Object.keys(item).join(', ');
+    const values = Object.values(item).map(value => {
+      if (value === null || value === undefined) {
+        return 'NULL';
+      } else if (typeof value === 'string') {
+        return `'${value.replace(/'/g, "''")}'`;
+      } else if (typeof value === 'object') {
+        return `'${JSON.stringify(value).replace(/'/g, "''")}'`;
+      } else {
+        return value;
+      }
+    }).join(', ');
+    
+    return `INSERT INTO ${tableName} (${columns}) VALUES (${values});`;
+  });
+  
+  return insertStatements.join('\n');
+}
+
+// Load database analytics
+function loadDatabaseAnalytics() {
+  if (!state.currentDB) return;
+  
+  // Get storage usage with the Storage API if available
+  if (navigator.storage && navigator.storage.estimate) {
+    navigator.storage.estimate().then(estimate => {
+      const used = estimate.usage || 0;
+      const quota = estimate.quota || 0;
+      
+      // Update storage usage display
+      document.getElementById('storage-used').textContent = formatFileSize(used);
+      document.getElementById('storage-limit').textContent = `Storage Quota: ${formatFileSize(quota)}`;
+      
+      // Update storage bar
+      const percentage = quota > 0 ? (used / quota) * 100 : 0;
+      document.getElementById('storage-bar').style.width = `${percentage}%`;
+    }).catch(error => {
+      console.error('Error getting storage estimate:', error);
+    });
+  } else {
+    document.getElementById('storage-used').textContent = 'Storage usage not available';
+    document.getElementById('storage-limit').textContent = 'Storage Quota: Not available';
+  }
+  
+  // Generate object store analytics
+  generateObjectStoreAnalytics();
+}
+
+// Generate analytics for each object store
+function generateObjectStoreAnalytics() {
+  if (!state.currentDB) return;
+  
+  const container = document.getElementById('object-store-analytics');
+  container.innerHTML = '';
+  
+  const objectStoreNames = Array.from(state.currentDB.objectStoreNames);
+  
+  objectStoreNames.forEach(storeName => {
+    const analytics = document.createElement('div');
+    analytics.className = 'object-store-analytics';
+    
+    const heading = document.createElement('h3');
+    heading.textContent = storeName;
+    analytics.appendChild(heading);
+    
+    // Create a section for record count
+    const recordCount = document.createElement('div');
+    recordCount.className = 'analytics-item';
+    recordCount.innerHTML = '<p>Loading record count...</p>';
+    analytics.appendChild(recordCount);
+    
+    // Load record count asynchronously
+    const transaction = state.currentDB.transaction(storeName, 'readonly');
+    const objectStore = transaction.objectStore(storeName);
+    const countRequest = objectStore.count();
+    
+    countRequest.onsuccess = function() {
+      recordCount.innerHTML = `<p><strong>Record Count:</strong> ${countRequest.result}</p>`;
+    };
+    
+    countRequest.onerror = function(event) {
+      recordCount.innerHTML = `<p><strong>Record Count:</strong> Error: ${event.target.error.message}</p>`;
+    };
+    
+    // Create a section for index analytics
+    const indexAnalytics = document.createElement('div');
+    indexAnalytics.className = 'analytics-item';
+    
+    const indexNames = Array.from(objectStore.indexNames);
+    
+    if (indexNames.length > 0) {
+      indexAnalytics.innerHTML = '<p><strong>Indexes:</strong></p><ul></ul>';
+      
+      const indexList = indexAnalytics.querySelector('ul');
+      
+      indexNames.forEach(indexName => {
+        const indexItem = document.createElement('li');
+        indexItem.textContent = indexName;
+        indexList.appendChild(indexItem);
+      });
+    } else {
+      indexAnalytics.innerHTML = '<p><strong>Indexes:</strong> None</p>';
+    }
+    
+    analytics.appendChild(indexAnalytics);
+    
+    // Add to container
+    container.appendChild(analytics);
+    
+    // After record count is loaded, create a simple bar chart
+    countRequest.addEventListener('success', function() {
+      // Only create charts if there are records
+      if (countRequest.result > 0) {
+        const chartContainer = document.createElement('div');
+        chartContainer.className = 'chart-container';
+        
+        const chart = document.createElement('div');
+        chart.className = 'size-bar';
+        chart.style.height = '24px';
+        chart.style.marginTop = '10px';
+        
+        const chartFill = document.createElement('div');
+        chartFill.className = 'size-fill';
+        chartFill.style.width = '100%';
+        
+        chart.appendChild(chartFill);
+        chartContainer.appendChild(chart);
+        
+        const label = document.createElement('div');
+        label.className = 'size-label';
+        label.textContent = `${countRequest.result} records`;
+        chartContainer.appendChild(label);
+        
+        analytics.appendChild(chartContainer);
+      }
+    });
+  });
+}
+
+// Show create database modal
+function showCreateDatabaseModal() {
+  document.getElementById('create-db-modal').style.display = 'block';
+}
+
+// Hide create database modal
+function hideCreateDatabaseModal() {
+  document.getElementById('create-db-modal').style.display = 'none';
+}
+
+// Add object store to create database form
+function addObjectStoreToForm() {
+  const container = document.getElementById('object-store-list');
+  const storeIndex = container.children.length;
+  
+  const storeEntry = document.createElement('div');
+  storeEntry.className = 'object-store-entry';
+  
+  storeEntry.innerHTML = `
+    <div class="field-row">
+      <label for="store-name-${storeIndex}">Name:</label>
+      <input type="text" id="store-name-${storeIndex}" required>
+    </div>
+    <div class="field-row">
+      <label for="store-key-path-${storeIndex}">Key Path:</label>
+      <input type="text" id="store-key-path-${storeIndex}" placeholder="e.g., id">
+    </div>
+    <div class="field-row">
+      <label for="store-auto-increment-${storeIndex}">Auto Increment:</label>
+      <input type="checkbox" id="store-auto-increment-${storeIndex}">
+    </div>
+
+    <h4>Indexes</h4>
+    <div class="indexes-list" id="indexes-list-${storeIndex}">
+      <!-- Indexes will be added here -->
+    </div>
+    <button class="add-index" data-store-index="${storeIndex}">+ Add Index</button>
+  `;
+  
+  container.appendChild(storeEntry);
+  
+  // Add event listener for add index button
+  storeEntry.querySelector('.add-index').addEventListener('click', function() {
+    const storeIndex = this.getAttribute('data-store-index');
+    addIndexToObjectStore(storeIndex);
+  });
+}
+
+// Add index to object store in create database form
+function addIndexToObjectStore(storeIndex) {
+  const container = document.getElementById(`indexes-list-${storeIndex}`);
+  const indexIndex = container.children.length;
+  
+  const indexEntry = document.createElement('div');
+  indexEntry.className = 'index-entry';
+  
+  indexEntry.innerHTML = `
+    <div class="field-row">
+      <label for="index-name-${storeIndex}-${indexIndex}">Name:</label>
+      <input type="text" id="index-name-${storeIndex}-${indexIndex}" required>
+    </div>
+    <div class="field-row">
+      <label for="index-key-path-${storeIndex}-${indexIndex}">Key Path:</label>
+      <input type="text" id="index-key-path-${storeIndex}-${indexIndex}" required>
+    </div>
+    <div class="field-row">
+      <label for="index-unique-${storeIndex}-${indexIndex}">Unique:</label>
+      <input type="checkbox" id="index-unique-${storeIndex}-${indexIndex}">
+    </div>
+    <div class="field-row">
+      <label for="index-multi-entry-${storeIndex}-${indexIndex}">Multi Entry:</label>
+      <input type="checkbox" id="index-multi-entry-${storeIndex}-${indexIndex}">
+    </div>
+    <button class="remove-index secondary" data-store-index="${storeIndex}" data-index-index="${indexIndex}">Remove</button>
+  `;
+  
+  container.appendChild(indexEntry);
+  
+  // Add event listener for remove index button
+  indexEntry.querySelector('.remove-index').addEventListener('click', function() {
+    this.closest('.index-entry').remove();
+  });
+}
+
+// Create a new database
+function createNewDatabase() {
+  const dbName = document.getElementById('new-db-name').value;
+  const dbVersion = parseInt(document.getElementById('new-db-version').value, 10);
+  
+  if (!dbName) {
+    showToast('Please enter a database name', 'error');
+    return;
+  }
+  
+  if (isNaN(dbVersion) || dbVersion < 1) {
+    showToast('Please enter a valid version number (>=1)', 'error');
+    return;
+  }
+  
+  // Close any open database
+  if (state.currentDB) {
+    state.currentDB.close();
+    state.currentDB = null;
+  }
+  
+  // Collect object store definitions
+  const objectStores = [];
+  const objectStoreEntries = document.querySelectorAll('.object-store-entry');
+  
+  objectStoreEntries.forEach((entry, storeIndex) => {
+    const storeName = document.getElementById(`store-name-${storeIndex}`).value;
+    const keyPath = document.getElementById(`store-key-path-${storeIndex}`).value;
+    const autoIncrement = document.getElementById(`store-auto-increment-${storeIndex}`).checked;
+    
+    if (!storeName) return;
+    
+    const store = {
+      name: storeName,
+      options: {}
+    };
+    
+    if (keyPath) {
+      store.options.keyPath = keyPath;
+    }
+    
+    store.options.autoIncrement = autoIncrement;
+    
+    // Collect indexes
+    store.indexes = [];
+    
+    const indexEntries = document.querySelectorAll(`#indexes-list-${storeIndex} .index-entry`);
+    indexEntries.forEach((indexEntry, indexIndex) => {
+      const indexName = document.getElementById(`index-name-${storeIndex}-${indexIndex}`).value;
+      const indexKeyPath = document.getElementById(`index-key-path-${storeIndex}-${indexIndex}`).value;
+      const unique = document.getElementById(`index-unique-${storeIndex}-${indexIndex}`).checked;
+      const multiEntry = document.getElementById(`index-multi-entry-${storeIndex}-${indexIndex}`).checked;
+      
+      if (!indexName || !indexKeyPath) return;
+      
+      store.indexes.push({
+        name: indexName,
+        keyPath: indexKeyPath,
+        options: { unique, multiEntry }
+      });
+    });
+    
+    objectStores.push(store);
+  });
+  
+  if (objectStores.length === 0) {
+    showToast('Please add at least one object store', 'error');
+    return;
+  }
+  
+  // Open and create the database
+  const request = indexedDB.open(dbName, dbVersion);
+  
+  request.onupgradeneeded = function(event) {
+    const db = event.target.result;
+    
+    // Create object stores
+    objectStores.forEach(store => {
+      const objectStore = db.createObjectStore(store.name, store.options);
+      
+      // Create indexes
+      store.indexes.forEach(index => {
+        objectStore.createIndex(index.name, index.keyPath, index.options);
+      });
+    });
+    
+    showToast(`Creating database "${dbName}" with ${objectStores.length} object stores`);
+  };
+  
+  request.onsuccess = function(event) {
+    const db = event.target.result;
+    db.close();
+    
+    showToast(`Database "${dbName}" created successfully`);
+    hideCreateDatabaseModal();
+    
+    // Refresh database list and select the new database
+    loadDatabases().then(() => {
+      document.getElementById('database-select').value = dbName;
+      openDatabase(dbName);
+    });
+  };
+  
+  request.onerror = function(event) {
+    console.error('Error creating database:', event.target.error);
+    showToast(`Failed to create database: ${event.target.error.message}`, 'error');
+  };
+}
+
+// Show a toast notification
+function showToast(message, type = 'info') {
+  const toastContainer = document.getElementById('toast-container');
+  
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  
+  toastContainer.appendChild(toast);
+  
+  // Remove the toast after a few seconds
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(20px)';
+    
+    setTimeout(() => {
+      toastContainer.removeChild(toast);
+    }, 300);
+  }, 3000);
+}
+</script>
+
+</body>
+</html>
