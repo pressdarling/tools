@@ -2,10 +2,316 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0; url=https://www.llm-prices.com/">
-    <title>Redirecting to llm-prices.com</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Pricing Calculator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .calculator, .presets, .disclaimer {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        @media (min-width: 768px) {
+            .flex-container {
+                display: flex;
+                gap: 20px;
+            }
+            .calculator {
+                flex: 1;
+            }
+            .presets {
+                flex: 1;
+            }
+        }
+        h1, h2 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+        }
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e9f7ef;
+            border-radius: 4px;
+        }
+        .result p {
+            margin: 5px 0;
+            font-size: 18px;
+            color: #2ecc71;
+        }
+        .preset-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .preset-btn {
+            flex: 0 0 auto;
+            margin-right: 10px;
+            padding: 8px 12px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .preset-btn:hover {
+            background-color: #2980b9;
+        }
+        .preset-info {
+          flex: 1;
+          font-size: 14px;
+          color: #666;
+        }
+        /* New styles for sort options */
+        .sort-options {
+          display: flex;
+          gap: 1rem;
+          margin-bottom: 15px;
+          align-items: center;
+          justify-content: center;
+        }
+        .sort-option {
+          cursor: pointer;
+          padding: 8px 12px;
+          background-color: #3498db;
+          color: white;
+          border: none;
+          border-radius: 4px;
+        }
+        .sort-option.active {
+          background-color: #2980b9;
+        .disclaimer {
+            font-size: 14px;
+            color: #777;
+            text-align: center;
+            font-style: italic;
+        }
+    </style>
 </head>
 <body>
-    <p>If you are not redirected automatically, follow this <a href="https://www.llm-prices.com/">link to www.llm-prices.com/</a>.</p>
+    <div class="container">
+        <div class="flex-container">
+            <div class="calculator">
+                <h1>LLM Pricing Calculator</h1>
+                <div class="input-group">
+                    <label for="inputTokens">Number of input tokens (aka prompt tokens):</label>
+                    <input type="number" id="inputTokens" min="0" onkeyup="calculateCost()" onchange="calculateCost()">
+                </div>
+                <div class="input-group">
+                    <label for="outputTokens">Number of output tokens (aka completion tokens):</label>
+                    <input type="number" id="outputTokens" min="0" onkeyup="calculateCost()" onchange="calculateCost()">
+                </div>
+                <div class="input-group">
+                    <label for="inputCost">Cost per million input tokens ($):</label>
+                    <input type="number" id="inputCost" min="0" step="0.000001" onkeyup="calculateCost()" onchange="calculateCost()">
+                </div>
+                <div class="input-group">
+                    <label for="outputCost">Cost per million output tokens ($):</label>
+                    <input type="number" id="outputCost" min="0" step="0.000001" onkeyup="calculateCost()" onchange="calculateCost()">
+                </div>
+                <div class="result">
+                    <p>Total cost: $<span id="costDollars">0.000000</span></p>
+                    <p>Total cost: <span id="costCents">0</span> cents</p>
+                </div>
+            </div>
+
+            <div class="presets">
+                <h2>Preset prices (all per million tokens)</h2>
+                <!-- New sorting options added above the preset list -->
+                <div class="sort-options">
+                  <span>Sort by:</span>
+                    <button class="sort-option active" onclick="sortPresets('alpha')" aria-pressed="true">Alphabetical</button>
+                    <button class="sort-option" onclick="sortPresets('default')" aria-pressed="false">Default Order</button>
+                    <button class="sort-option" onclick="sortPresets('input')" aria-pressed="false">Input Price</button>
+                    <button class="sort-option" onclick="sortPresets('output')" aria-pressed="false">Output Price</button>
+                </div>
+                <div id="presetList"></div>
+            </div>
+        </div>
+
+        <div class="disclaimer">Prices may have changed since this tool was last updated.</div>
+    </div>
+
+    <script>
+        // Prices are $ per 1M tokens
+        const presets = {
+            'gemini-2.0-flash-lite': { name: 'Gemini 2.0 Flash Lite', input: 0.075, output: 0.30 },
+            'gemini-2.0-flash': { name: 'Gemini 2.0 Flash', input: 0.10, output: 0.40 },
+            'gemini-1.5-flash': { name: 'Gemini 1.5 Flash ≤128k', input: 0.075, output: 0.30 },
+            'gemini-1.5-flash-128k': { name: 'Gemini 1.5 Flash >128k', input: 0.15, output: 0.60 },
+            'gemini-1.5-flash-8b': { name: 'Gemini 1.5 Flash-8B ≤128k', input: 0.0375, output: 0.15 },
+            'gemini-1.5-flash-8b-128k': { name: 'Gemini 1.5 Flash-8B >128k', input: 0.075, output: 0.30 },
+            'gemini-1.5-pro': { name: 'Gemini 1.5 Pro ≤128k', input: 1.25, output: 5.00 },
+            'gemini-1.5-pro-128k': { name: 'Gemini 1.5 Pro >128k', input: 2.50, output: 10.00 },
+            'claude-3.7-sonnet': { name: 'Claude 3.7 Sonnet', input: 3.00, output: 15.00 },
+            'claude-3.5-sonnet': { name: 'Claude 3.5 Sonnet', input: 3.00, output: 15.00 },
+            'claude-3-opus': { name: 'Claude 3 Opus', input: 15.00, output: 75.00 },
+            'claude-3-haiku': { name: 'Claude 3 Haiku', input: 0.25, output: 1.25 },
+            'claude-3.5-haiku': { name: 'Claude 3.5 Haiku', input: 0.80, output: 4.00 },
+            'gpt-4.5': { name: 'GPT-4.5', input: 75.00, output: 150.00 },
+            'gpt-4o': { name: 'GPT-4o', input: 2.50, output: 10.00 },
+            'gpt-4o-mini': { name: 'GPT-4o Mini', input: 0.150, output: 0.600 },
+            'chatgpt-4o-latest': { name: 'ChatGPT 4o Latest', input: 5.00, output: 15.00 },
+            'o1-preview': { name: 'o1 and o1-preview', input: 15.00, output: 60.00 },
+            'o1-mini': { name: 'o1-mini', input: 1.10, output: 4.40 },
+            'o3-mini': { name: 'o3-mini', input: 1.10, output: 4.40 },
+            'amazon-nova-micro': { name: 'Amazon Nova Micro', input: 0.035, output: 0.14 },
+            'amazon-nova-lite': { name: 'Amazon Nova Lite', input: 0.06, output: 0.24 },
+            'amazon-nova-pro': { name: 'Amazon Nova Pro', input: 0.8, output: 3.2 },
+            'deepseek-chat': { 
+                name: 'DeepSeek Chat',
+                getPrice: () => {
+                    const cutoffDate = new Date('2025-02-08T16:00:00Z');
+                    const currentDate = new Date();
+                    
+                    if (currentDate < cutoffDate) {
+                        return { input: 0.14, output: 0.28 };
+                    } else {
+                        return { input: 0.27, output: 1.10 };
+                    }
+                }
+            },
+            'deepseek-reasoner': { name: 'DeepSeek Reasoner', input: 0.55, output: 2.19 },
+            'pixtral-12b': { name: 'Pixtral 12B', input: 0.15, output: 0.15 },
+            'mistral-small-latest': { name: 'Mistral Small 3.1', input: 0.1, output: 0.3 },
+            'mistral-nemo': { name: 'Mistral NeMo', input: 0.15, output: 0.15 },
+            'open-mistral-7b': { name: 'Mistral 7B', input: 0.25, output: 0.25 },
+            'open-mixtral-8x7b': { name: 'Mixtral 8x7B', input: 0.7, output: 0.7 },
+            'open-mixtral-8x22b': { name: 'Mixtral 8x22B', input: 2, output: 6 },
+            'mistral-large-latest': { name: 'Mistral Large 24.11', input: 2, output: 6 },
+            'pixtral-large-latest': { name: 'Pixtral Large', input: 2, output: 6 },
+            'mistral-saba-latest': { name: 'Mistral Saba', input: 0.2, output: 0.6 },
+            'codestral-latest': { name: 'Codestral', input: 0.3, output: 0.9 },
+            'ministral-8b-latest': { name: 'Ministral 8B 24.10', input: 0.1, output: 0.1 },
+            'ministral-3b-latest': { name: 'Ministral 3B 24.10', input: 0.04, output: 0.04 },
+        };
+
+        function calculateCost() {
+            const inputTokens = parseFloat(document.getElementById('inputTokens').value) || 0;
+            const outputTokens = parseFloat(document.getElementById('outputTokens').value) || 0;
+            const inputCost = parseFloat(document.getElementById('inputCost').value) || 0;
+            const outputCost = parseFloat(document.getElementById('outputCost').value) || 0;
+
+            const totalCost = (inputTokens * inputCost / 1000000) + (outputTokens * outputCost / 1000000);
+            
+            document.getElementById('costDollars').textContent = totalCost.toFixed(6);
+            document.getElementById('costCents').textContent = trimZeros((totalCost * 100).toFixed(4));
+        }
+
+        function trimZeros(num) {
+            return num.replace(/\.?0+$/, '');
+        }
+
+        function setPreset(model) {
+            const preset = presets[model];
+            let prices;
+            
+            if (preset.getPrice) {
+                prices = preset.getPrice();
+            } else {
+                prices = { input: preset.input, output: preset.output };
+            }
+            
+            document.getElementById('inputCost').value = prices.input;
+            document.getElementById('outputCost').value = prices.output;
+            calculateCost();
+        }
+
+        function formatPrice(price) {
+            if (Number.isInteger(price)) {
+                return `$${price}`;
+            } else {
+                return `$${price.toFixed(3).replace(/\.?0+$/, '')}`;
+            }
+        }
+
+        function createPresetButtons() {
+            const presetList = document.getElementById('presetList');
+            let index = 0;
+            for (const [key, preset] of Object.entries(presets)) {
+              const presetItem = document.createElement('div');
+              presetItem.className = 'preset-item';
+              presetItem.dataset.name = preset.name;
+              presetItem.dataset.index = index;
+              let prices;
+              if (preset.getPrice) {
+                prices = preset.getPrice();
+              } else {
+                prices = { input: preset.input, output: preset.output };
+              }
+              // Store prices for sorting by input and output
+              presetItem.dataset.input = prices.input;
+              presetItem.dataset.output = prices.output;
+              presetItem.innerHTML = `
+                <button class="preset-btn" onclick="setPreset('${key}')">${preset.name}</button>
+                <span class="preset-info">Input: ${formatPrice(prices.input)} / Output: ${formatPrice(prices.output)}</span>
+              `;
+              presetList.appendChild(presetItem);
+              index++;
+            }
+        }
+
+        // New function to sort the preset list
+        function sortPresets(criteria) {
+          const presetList = document.getElementById('presetList');
+          const presetItems = Array.from(presetList.children);
+          presetItems.sort((a, b) => {
+          if (criteria === 'alpha') {
+            return a.dataset.name.toLowerCase().localeCompare(b.dataset.name.toLowerCase());
+          } else if (criteria === 'default') {
+            return Number(a.dataset.index) - Number(b.dataset.index);
+          } else if (criteria === 'input') {
+            return parseFloat(a.dataset.input) - parseFloat(b.dataset.input);
+          } else if (criteria === 'output') {
+            return parseFloat(a.dataset.output) - parseFloat(b.dataset.output);
+          }
+          });
+          // Rebuild the preset list with sorted items
+          presetList.innerHTML = '';
+          presetItems.forEach(item => presetList.appendChild(item));
+          // Update active states for sort buttons
+          document.querySelectorAll('.sort-option').forEach(btn => {
+            btn.classList.remove('active');
+            btn.setAttribute('aria-pressed', 'false');
+          });
+          document.querySelector(`.sort-option[onclick="sortPresets('${criteria}')"]`).classList.add('active');
+          document.querySelector(`.sort-option[onclick="sortPresets('${criteria}')"]`).setAttribute('aria-pressed', 'true');
+        }
+
+        // Create preset buttons and run initial calculation
+        createPresetButtons();
+        calculateCost();
+    </script>
 </body>
 </html>
