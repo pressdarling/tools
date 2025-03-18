@@ -3,68 +3,117 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CSS Animation Playground - Enhanced</title>
+  <title>CSS Animation Playground - Rearranged with Slider</title>
   <style>
-    /* Reset and basic styling */
-    * { box-sizing: border-box; }
+    /* The VictorMonofication has commenced, TODO: host locally */
+    @import url('https://fonts.googleapis.com/css2?family=Victor+Mono:ital,wght@1,200&display=swap');
+
+    /* Base reset and typography */
+    * {
+      box-sizing: border-box;
+    }
     body {
       margin: 0;
       padding: 0;
       font-family: Helvetica, sans-serif;
-      background: #f5f5f5;
+      background: #fafafa;
       color: #333;
     }
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    header {
+
+    /* Header with accent */
+    .header {
       background: #18C1F3;
       color: #fff;
       padding: 16px;
       border-radius: 4px;
       margin-bottom: 20px;
     }
-    header h1 {
+    .header h1 {
       margin: 0;
       font-size: 24px;
     }
+
+    /* Main container and sections */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
     .section {
       background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
       padding: 16px;
       margin-bottom: 20px;
-      border-radius: 4px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
     }
-    .controls {
+    h2 {
+      margin-top: 0;
+    }
+
+    /* Flex layouts for top and bottom rows */
+    .flex-row {
       display: flex;
       flex-wrap: wrap;
       gap: 1rem;
-      align-items: flex-end;
+      align-items: flex-start;
+      align-items: flex-start;
+      border-radius: 4px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
     }
-    .form-group {
-      display: flex;
+    .panel {
+      flex: 1;
+      min-width: 280px;
       flex-direction: column;
-      min-width: 150px;
     }
+
+    /* Form elements */
     label {
+      display: block;
+      margin-top: 12px;
+      flex-grow: 1;
       margin-bottom: 4px;
       font-weight: bold;
     }
     input, select {
       padding: 6px;
       font-size: 16px;
+      font-family: Helvetica, sans-serif;
+      margin-bottom: 8px;
       border: 1px solid #ccc;
       border-radius: 4px;
     }
+    .range-input {
+      flex-grow: 1;
+    }
+    /* Row for offset input and slider side by side */
+    .offset-row {
+      display: flex;
+      min-width: 200px;
+      flex-grow: 1;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+      gap: 1rem;
+    }
+
+    /* Buttons with transitions */
     .button {
-      padding: 8px 12px;
-      font-size: 16px;
+      display: inline-block;
+      padding: 8px 16px;
+      margin: 8px 8px 0 0;
       border: none;
+      cursor: pointer;
+      font-size: 16px;
+      font-family: Helvetica, sans-serif;
+      background: #399eef;
+      color: #fff;
+      border-radius: 4px;
+      transition: background 0.2s ease;
+    }
+    .button:hover {
+      background: #2789e5;
       border-radius: 4px;
       background: #18C1F3;
-      color: #fff;
       cursor: pointer;
       margin-top: 8px;
     }
@@ -73,30 +122,28 @@
     }
     .button.danger {
       background: #d9534f;
+      margin: 0;
+    }
+
+    /* Keyframe item styling */
+    .keyframe {
       padding: 4px 8px;
-      font-size: 14px;
-    }
-    .button:hover {
-      opacity: 0.9;
-    }
-    #keyframes-container .keyframe {
+      background: #fff;
       border: 1px solid #ccc;
-      background: #fafafa;
       padding: 8px;
       border-radius: 4px;
-      margin-bottom: 12px;
+      margin-top: 10px;
     }
-    #keyframes-container .keyframe label {
-      margin: 4px 0;
-    }
-    /* Preview size set to v1 dimensions (approx 160px high) */
+
+    /* Preview container at 160px so it doesn't get pushed down */
     #preview-container {
-      position: relative;
       background: #fff;
       border: 1px solid #ccc;
       height: 160px;
-      border-radius: 4px;
+      position: relative;
       margin-top: 16px;
+      border-radius: 4px;
+      overflow: hidden;
     }
     #animated-element {
       width: 40px;
@@ -107,95 +154,109 @@
       left: 20px;
       border-radius: 4px;
     }
-    pre {
+
+    /* Generated CSS display */
+    #generated-css {
       background: #eee;
-      padding: 10px;
+      padding: 1rem;
       border-radius: 4px;
+      font-family: "Victor Mono", monospace;
+      font-size: 14px;
+      font-optical-sizing: auto;
+      font-weight: 200;
+      font-style: italic;
       overflow-x: auto;
       white-space: pre-wrap;
     }
-    /* Style for copy button */
+
+    /* Copy button spacing */
     #copy-css {
-      margin-top: 8px;
+      margin-top: 0.5rem;
     }
+  }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
+  <!-- Header -->
+  <div class="header">
+    <div class="container">
       <h1>CSS Animation Playground</h1>
-    </header>
-    
-    <div class="section" id="animation-properties">
-      <div class="controls">
-        <div class="form-group">
-          <label for="duration">Duration (s)</label>
-          <input type="number" id="duration" min="0" step="0.1" value="1">
-        </div>
-        <div class="form-group">
-          <label for="timingFunction">Timing Function</label>
-          <select id="timingFunction">
-            <option value="ease">ease</option>
-            <option value="linear">linear</option>
-            <option value="ease-in">ease-in</option>
-            <option value="ease-out">ease-out</option>
-            <option value="ease-in-out">ease-in-out</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="delay">Delay (s)</label>
-          <input type="number" id="delay" min="0" step="0.1" value="0">
-        </div>
-        <div class="form-group">
-          <label for="iterationCount">Iteration Count (0 = infinite)</label>
-          <input type="number" id="iterationCount" min="0" value="1">
-        </div>
-        <div class="form-group">
-          <label for="direction">Direction</label>
-          <select id="direction">
-            <option value="normal">normal</option>
-            <option value="reverse">reverse</option>
-            <option value="alternate">alternate</option>
-            <option value="alternate-reverse">alternate-reverse</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="fillMode">Fill Mode</label>
-          <select id="fillMode">
-            <option value="none">none</option>
-            <option value="forwards">forwards</option>
-            <option value="backwards">backwards</option>
-            <option value="both">both</option>
-          </select>
-        </div>
-      </div>
-    </div>
-    
-    <div class="section" id="keyframes-section">
-      <h2>Keyframes</h2>
-      <div id="keyframes-container"></div>
-      <button type="button" class="button secondary" id="add-keyframe">Add Keyframe</button>
-    </div>
-    
-    <div class="section" id="preview-section">
-      <h2>Preview</h2>
-      <div id="preview-container">
-        <!-- Inject keyframes dynamically here -->
-        <style id="keyframes-style"></style>
-        <div id="animated-element"></div>
-      </div>
-      <button type="button" class="button" id="replay">Replay Animation</button>
-    </div>
-    
-    <div class="section" id="generated-css-section">
-      <h2>Generated CSS</h2>
-      <pre id="generated-css"></pre>
-      <button type="button" class="button" id="copy-css" aria-label="Copy generated CSS to clipboard">Copy to Clipboard</button>
     </div>
   </div>
-  
+
+  <div class="container">
+    <!-- Top row: Preview + Generated CSS side by side -->
+    <div class="flex-row" style="margin-bottom: 20px;">
+      <!-- Preview Panel -->
+      <div class="section panel">
+        <h2>Preview</h2>
+        <div id="preview-container">
+          <style id="keyframes-style"></style>
+          <div id="animated-element"></div>
+        </div>
+        <button type="button" class="button" id="replay">Replay Animation</button>
+      </div>
+      <!-- Generated CSS Panel -->
+      <div class="section panel">
+        <h2>Generated CSS</h2>
+        <div id="generated-css"></div>
+        <button type="button" class="button" id="copy-css" aria-label="Copy generated CSS to clipboard">Copy to Clipboard</button>
+      </div>
+    </div>
+
+    <!-- Bottom row: Animation Properties + Keyframes side by side -->
+    <div class="flex-row">
+      <!-- Animation Properties Panel -->
+      <div class="section panel">
+        <h2>Animation Properties</h2>
+
+        <label for="duration">Duration (s)</label>
+        <input type="number" id="duration" min="0" step="0.01" value="1">
+
+        <label for="timingFunction">Timing Function</label>
+        <select id="timingFunction">
+          <option value="ease">ease</option>
+          <option value="linear">linear</option>
+          <option value="ease-in">ease-in</option>
+          <option value="ease-out">ease-out</option>
+          <option value="ease-in-out">ease-in-out</option>
+        </select>
+
+        <label for="delay">Delay (s)</label>
+        <input type="number" id="delay" min="0" step="0.01" value="0">
+
+        <label for="iterationCount">Iteration Count (0 = infinite)</label>
+        <!-- Default 0 means infinite looping -->
+        <input type="number" id="iterationCount" min="0" value="0">
+
+        <label for="direction">Direction</label>
+        <select id="direction">
+          <option value="normal">normal</option>
+          <option value="reverse">reverse</option>
+          <option value="alternate">alternate</option>
+          <option value="alternate-reverse">alternate-reverse</option>
+        </select>
+
+        <label for="fillMode">Fill Mode</label>
+        <select id="fillMode">
+          <option value="none">none</option>
+          <option value="forwards">forwards</option>
+          <option value="backwards">backwards</option>
+          <option value="both">both</option>
+        </select>
+      </div>
+
+      <!-- Keyframes Panel -->
+      <div class="section panel">
+        <h2>Keyframes</h2>
+        <div id="keyframes-container"></div>
+        <button type="button" class="button secondary" id="add-keyframe">Add Keyframe</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    // Updated default animation state: 3 keyframes with looping (0 and 1 share the same transform)
+    // Default iterationCount is 0 => infinite
     const animationProperties = {
       duration: 1,
       timingFunction: 'ease',
@@ -204,170 +265,226 @@
       direction: 'normal',
       fillMode: 'none',
       keyframes: [
-        { offset: 0, transform: 'translateX(0)' },
-        { offset: 0.5, transform: 'translateX(100px)' },
-        { offset: 1, transform: 'translateX(0)' }
+        { offset: 0,   transform: 'translateX(0)' },
+        { offset: 0.5, transform: 'translateX(200px)' },
+        { offset: 1,   transform: 'translateX(0)' }
       ]
     };
 
     // DOM elements
-    const durationInput = document.getElementById('duration');
+    const durationInput        = document.getElementById('duration');
     const timingFunctionSelect = document.getElementById('timingFunction');
-    const delayInput = document.getElementById('delay');
-    const iterationCountInput = document.getElementById('iterationCount');
-    const directionSelect = document.getElementById('direction');
-    const fillModeSelect = document.getElementById('fillMode');
-    const keyframesContainer = document.getElementById('keyframes-container');
-    const animatedElement = document.getElementById('animated-element');
-    const keyframesStyle = document.getElementById('keyframes-style');
-    const generatedCssEl = document.getElementById('generated-css');
-    const addKeyframeBtn = document.getElementById('add-keyframe');
-    const replayBtn = document.getElementById('replay');
-    const copyCssBtn = document.getElementById('copy-css');
+    const delayInput           = document.getElementById('delay');
+    const iterationCountInput  = document.getElementById('iterationCount');
+    const directionSelect      = document.getElementById('direction');
+    const fillModeSelect       = document.getElementById('fillMode');
+    const keyframesContainer   = document.getElementById('keyframes-container');
+    const animatedElement      = document.getElementById('animated-element');
+    const keyframesStyle       = document.getElementById('keyframes-style');
+    const generatedCssEl       = document.getElementById('generated-css');
+    const addKeyframeBtn       = document.getElementById('add-keyframe');
+    const replayBtn            = document.getElementById('replay');
+    const copyCssBtn           = document.getElementById('copy-css');
 
-    // List of preset transform options
+    // Transform presets
     const transformPresets = [
-      { label: 'Custom', value: 'custom' },
-      { label: 'translateX(0)', value: 'translateX(0)' },
-      { label: 'translateX(100px)', value: 'translateX(100px)' },
-      { label: 'translateY(100px)', value: 'translateY(100px)' },
-      { label: 'rotate(45deg)', value: 'rotate(45deg)' },
-      { label: 'scale(1)', value: 'scale(1)' },
-      { label: 'scale(1.5)', value: 'scale(1.5)' }
+      { label: 'Custom',            value: 'custom' },
+      { label: 'translateX(0)',     value: 'translateX(0)' },
+      { label: 'translateX(200px)', value: 'translateX(200px)' },
+      { label: 'translateY(0)',     value: 'translateY(0)' },
+      { label: 'translateY(120px)', value: 'translateY(120px)' },
+      { label: 'rotate(0deg)',     value: 'rotate(0deg)' },
+      { label: 'rotate(90deg)',     value: 'rotate(90deg)' },
+      { label: 'rotate(135deg)',     value: 'rotate(135deg)' },
+      { label: 'scale(1)',         value: 'scale(1)' },
+      { label: 'scale(1.5)',         value: 'scale(1.5)' },
+      { label: 'scale(0.5)',       value: 'scale(0.5)' }
     ];
 
-    // Update the preview element's animation style and inject keyframes CSS
-    function updatePreview() {
-      const iterCount = animationProperties.iterationCount === 0 ? 'infinite' : animationProperties.iterationCount;
-      const keyframesCSS = animationProperties.keyframes.map(kf => {
-        const percentage = Math.round(kf.offset * 100);
-        return `${percentage}% { transform: ${kf.transform}; }`;
-      }).join('\n  ');
-      
-      const fullKeyframesCSS = `@keyframes myAnimation {\n  ${keyframesCSS}\n}`;
-      keyframesStyle.innerHTML = fullKeyframesCSS;
-      
-      animatedElement.style.animation = `myAnimation ${animationProperties.duration}s ${animationProperties.timingFunction} ${animationProperties.delay}s ${iterCount} ${animationProperties.direction} ${animationProperties.fillMode}`;
-    }
-    
-    // Generate the full CSS code for display
-    function updateGeneratedCSS() {
-      const iterCount = animationProperties.iterationCount === 0 ? 'infinite' : animationProperties.iterationCount;
-      const keyframesCSS = animationProperties.keyframes.map(kf => {
-        const percentage = Math.round(kf.offset * 100);
-        return `${percentage}% { transform: ${kf.transform}; }`;
-      }).join('\n  ');
-      
-      const cssCode = `@keyframes myAnimation {\n  ${keyframesCSS}\n}\n\n.animated-element {\n  animation: myAnimation ${animationProperties.duration}s ${animationProperties.timingFunction} ${animationProperties.delay}s ${iterCount} ${animationProperties.direction} ${animationProperties.fillMode};\n}`;
-      generatedCssEl.textContent = cssCode;
-    }
-    
-    // Render keyframes UI
-    function renderKeyframes() {
-      keyframesContainer.innerHTML = '';
-      animationProperties.keyframes.forEach((kf, index) => {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'keyframe';
-
-        // Label for keyframe
-        const label = document.createElement('label');
-        label.textContent = `Keyframe ${index + 1} (Offset 0-1)`;
-        wrapper.appendChild(label);
-        
-        // Offset input
-        const offsetInput = document.createElement('input');
-        offsetInput.type = 'number';
-        offsetInput.min = '0';
-        offsetInput.max = '1';
-        offsetInput.step = '0.1';
-        offsetInput.value = kf.offset;
-        offsetInput.addEventListener('input', () => {
-          animationProperties.keyframes[index].offset = parseFloat(offsetInput.value);
-          render();
-        });
-        wrapper.appendChild(offsetInput);
-        
-        // Transform input
-        const transformLabel = document.createElement('label');
-        transformLabel.textContent = 'Transform';
-        transformLabel.style.marginTop = '6px';
-        wrapper.appendChild(transformLabel);
-        
-        const transformInput = document.createElement('input');
-        transformInput.type = 'text';
-        transformInput.value = kf.transform;
-        transformInput.addEventListener('input', () => {
-          animationProperties.keyframes[index].transform = transformInput.value;
-          render();
-        });
-        wrapper.appendChild(transformInput);
-        
-        // Preset select for transform options
-        const presetSelect = document.createElement('select');
-        presetSelect.style.marginTop = '6px';
-        transformPresets.forEach(preset => {
-          const option = document.createElement('option');
-          option.value = preset.value;
-          option.textContent = preset.label;
-          presetSelect.appendChild(option);
-        });
-        // Set select value based on keyframe transform or default to "custom"
-        const match = transformPresets.find(p => p.value === kf.transform);
-        presetSelect.value = match ? match.value : 'custom';
-        presetSelect.addEventListener('change', () => {
-          if (presetSelect.value !== 'custom') {
-            transformInput.value = presetSelect.value;
-            animationProperties.keyframes[index].transform = presetSelect.value;
-            render();
-          }
-        });
-        wrapper.appendChild(presetSelect);
-        
-        // Remove button (v1 style, with just an "X")
-        const removeBtn = document.createElement('button');
-        removeBtn.textContent = 'X';
-        removeBtn.className = 'button danger';
-        removeBtn.type = 'button';
-        removeBtn.addEventListener('click', () => {
-          animationProperties.keyframes.splice(index, 1);
-          render();
-        });
-        wrapper.appendChild(removeBtn);
-        
-        keyframesContainer.appendChild(wrapper);
-      });
-    }
-    
-    // Update state from inputs and render everything
+    // Master render function
     function render() {
+      // Pull current values
       animationProperties.duration = parseFloat(durationInput.value);
       animationProperties.timingFunction = timingFunctionSelect.value;
       animationProperties.delay = parseFloat(delayInput.value);
       animationProperties.iterationCount = parseInt(iterationCountInput.value);
       animationProperties.direction = directionSelect.value;
       animationProperties.fillMode = fillModeSelect.value;
-      
-      renderKeyframes();
+
+      renderKeyframesUI();
       updatePreview();
       updateGeneratedCSS();
     }
-    
-    // Replay the animation by forcing a reflow
+
+    function renderKeyframesUI() {
+      keyframesContainer.innerHTML = '';
+      animationProperties.keyframes.forEach((kf, index) => {
+        const item = document.createElement('div');
+        item.className = 'keyframe';
+
+        // 1. Create the new offset-row container
+        const newOffsetRow = document.createElement('div');
+        newOffsetRow.classList.add('offset-row');
+        newOffsetRow.style.display = 'flex';
+        newOffsetRow.style.alignItems = 'center';
+        newOffsetRow.style.marginBottom = '4px';
+        newOffsetRow.style.justifyContent = 'space-between';
+
+        // Keyframe label
+        const label = document.createElement('label');
+        label.textContent = `Keyframe ${index + 1} (Offset 0-1)`;
+        label.style.flexGrow = '1';
+
+        // 3. Create the removeBtn
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'button danger';
+        removeBtn.style.margin = '0';
+        removeBtn.textContent = 'X';
+        removeBtn.type = 'button';
+        removeBtn.addEventListener('click', () => {
+          animationProperties.keyframes.splice(index, 1);
+          render();
+        });
+
+        // 4. Move elements into the new offset-row
+        newOffsetRow.appendChild(label);
+        newOffsetRow.appendChild(removeBtn);
+
+        // 5. Find the parent and the existing offset-row
+        const parent = item; // assuming item is the parent element
+        const existingOffsetRow = parent.querySelector('.offset-row'); // assuming there's an existing offset-row
+
+        // 6. Insert the new offset-row before the existing offset-row
+        parent.insertBefore(newOffsetRow, existingOffsetRow);
+
+        // Offset row with numeric and slider
+        const offsetRow = document.createElement('div');
+        offsetRow.className = 'offset-row';
+
+        // Numeric input
+        const offsetInput = document.createElement('input');
+        offsetInput.type = 'number';
+        offsetInput.className = 'number-input';
+        offsetInput.step = '0.01';
+        offsetInput.min = '0';
+        offsetInput.max = '1';
+        offsetInput.value = kf.offset;
+        
+        // Range slider
+        const offsetRange = document.createElement('input');
+        offsetRange.type = 'range';
+        offsetRange.className = 'range-input';
+        offsetRange.step = '0.01';
+        offsetRange.min = '0';
+        offsetRange.max = '1';
+        offsetRange.value = kf.offset;
+
+        // Sync numeric input to slider
+        offsetInput.addEventListener('input', () => {
+          // Clean or clamp the numeric input
+          let val = parseFloat(offsetInput.value);
+          if (isNaN(val)) val = 0;
+          if (val < 0) val = 0;
+          if (val > 1) val = 1;
+          kf.offset = val;
+          offsetRange.value = val;
+          render();
+        });
+        // Sync slider to numeric input
+        offsetRange.addEventListener('input', () => {
+          let val = parseFloat(offsetRange.value);
+          kf.offset = val;
+          offsetInput.value = val;
+          render();
+        });
+
+        offsetRow.appendChild(offsetInput);
+        offsetRow.appendChild(offsetRange);
+        item.appendChild(offsetRow);
+
+        // Transform label
+        const transformLabel = document.createElement('label');
+        transformLabel.textContent = 'Transform';
+        transformLabel.style.marginTop = '6px';
+        item.appendChild(transformLabel);
+
+        // Transform text input
+        const transformInput = document.createElement('input');
+        transformInput.type = 'text';
+        transformInput.value = kf.transform;
+        transformInput.addEventListener('input', () => {
+          kf.transform = transformInput.value;
+          render();
+        });
+        item.appendChild(transformInput);
+
+        // Preset dropdown
+        const presetSelect = document.createElement('select');
+        presetSelect.style.marginTop = '6px';
+        transformPresets.forEach(preset => {
+          const opt = document.createElement('option');
+          opt.value = preset.value;
+          opt.textContent = preset.label;
+          presetSelect.appendChild(opt);
+        });
+        const match = transformPresets.find(p => p.value === kf.transform);
+        presetSelect.value = match ? match.value : 'custom';
+        presetSelect.addEventListener('change', () => {
+          if (presetSelect.value !== 'custom') {
+            transformInput.value = presetSelect.value;
+            kf.transform = presetSelect.value;
+            render();
+          }
+        });
+        item.appendChild(presetSelect);
+
+        keyframesContainer.appendChild(item);
+      });
+    }
+
+    // Build and inject the @keyframes into <style>, then reapply animation
+    function updatePreview() {
+      const iterCount = animationProperties.iterationCount === 0 ? 'infinite' : animationProperties.iterationCount;
+      const kfCSS = animationProperties.keyframes.map(kf => {
+        const pct = Math.round(kf.offset * 100);
+        return `${pct}% { transform: ${kf.transform}; }`;
+      }).join('\n  ');
+
+      keyframesStyle.innerHTML = `@keyframes myAnimation {\n  ${kfCSS}\n}`;
+
+      // Force reflow, then apply
+      animatedElement.style.animation = 'none';
+      void animatedElement.offsetWidth;
+      animatedElement.style.animation = `myAnimation ${animationProperties.duration}s ${animationProperties.timingFunction} ${animationProperties.delay}s ${iterCount} ${animationProperties.direction} ${animationProperties.fillMode}`;
+    }
+
+    // Generate final CSS for display
+    function updateGeneratedCSS() {
+      const iterCount = animationProperties.iterationCount === 0 ? 'infinite' : animationProperties.iterationCount;
+      const kfCSS = animationProperties.keyframes.map(kf => {
+        const pct = Math.round(kf.offset * 100);
+        return `${pct}% { transform: ${kf.transform}; }`;
+      }).join('\n  ');
+
+      const cssText = `@keyframes myAnimation {\n  ${kfCSS}\n}\n\n.animated-element {\n  animation: myAnimation ${animationProperties.duration}s ${animationProperties.timingFunction} ${animationProperties.delay}s ${iterCount} ${animationProperties.direction} ${animationProperties.fillMode};\n}`;
+      generatedCssEl.textContent = cssText;
+    }
+
+    // Replay button
     function replayAnimation() {
       animatedElement.style.animation = 'none';
       void animatedElement.offsetWidth;
       updatePreview();
     }
-    
-    // Copy generated CSS to clipboard
-    function copyGeneratedCSS() {
+
+    // Copy to clipboard
+    function copyToClipboard() {
       const cssText = generatedCssEl.textContent;
       if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(cssText)
           .then(() => alert('Copied to clipboard!'))
           .catch(err => alert('Error copying text: ' + err));
       } else {
-        // Fallback for older browsers
         const textarea = document.createElement('textarea');
         textarea.value = cssText;
         textarea.style.position = 'absolute';
@@ -383,23 +500,22 @@
         document.body.removeChild(textarea);
       }
     }
-    
-    // Event listeners for property inputs
+
+    // Event listeners
     durationInput.addEventListener('input', render);
     timingFunctionSelect.addEventListener('change', render);
     delayInput.addEventListener('input', render);
     iterationCountInput.addEventListener('input', render);
     directionSelect.addEventListener('change', render);
     fillModeSelect.addEventListener('change', render);
-    
+
     addKeyframeBtn.addEventListener('click', () => {
       animationProperties.keyframes.push({ offset: 1, transform: 'translateX(0)' });
       render();
     });
-    
     replayBtn.addEventListener('click', replayAnimation);
-    copyCssBtn.addEventListener('click', copyGeneratedCSS);
-    
+    copyCssBtn.addEventListener('click', copyToClipboard);
+
     // Initial render
     render();
   </script>
