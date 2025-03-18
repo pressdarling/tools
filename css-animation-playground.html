@@ -2,13 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CSS Animation Playground - Improved</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CSS Animation Playground - Enhanced</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
+    /* Reset and basic styling */
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       padding: 0;
@@ -16,148 +14,120 @@
       background: #f5f5f5;
       color: #333;
     }
-
-    .header {
-      background: #18C1F3; /* mild accent */
-      color: #fff;
-      padding: 16px;
-      margin-bottom: 20px;
-    }
-    .header h1 {
-      margin: 0;
-      font-size: 24px;
-    }
-
     .container {
-      max-width: 960px;
+      max-width: 900px;
       margin: 0 auto;
       padding: 20px;
     }
-
-    .section {
-      background: #fff;
-      border-radius: 6px;
-      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    header {
+      background: #18C1F3;
+      color: #fff;
       padding: 16px;
+      border-radius: 4px;
       margin-bottom: 20px;
     }
-
-    h2 {
-      margin-top: 0;
+    header h1 {
+      margin: 0;
+      font-size: 24px;
     }
-
-    label {
-      display: block;
-      margin-top: 12px;
-      margin-bottom: 4px;
-    }
-
-    input,
-    select,
-    textarea {
-      font-size: 16px;
-      font-family: Helvetica, sans-serif;
-      padding: 6px;
-      margin-bottom: 8px;
-      width: 100%;
-      max-width: 260px;
-    }
-
-    .button {
-      display: inline-block;
-      padding: 6px 12px;
-      margin: 4px 8px 4px 0;
-      border: none;
-      cursor: pointer;
-      font-size: 16px;
-      font-family: Helvetica, sans-serif;
-      background: #007bff;
-      color: #fff;
+    .section {
+      background: #fff;
+      padding: 16px;
+      margin-bottom: 20px;
       border-radius: 4px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
     }
-
-    .button:hover {
-      background: #0056b3;
-    }
-
-    /* Layout for controls and keyframes side by side */
-    .flex-row {
+    .controls {
       display: flex;
       flex-wrap: wrap;
-      gap: 24px;
-      align-items: flex-start;
+      gap: 1rem;
+      align-items: flex-end;
     }
-
-    .panel {
-      flex: 1;
-      min-width: 280px;
-    }
-
     .form-group {
       display: flex;
       flex-direction: column;
-      margin-bottom: 12px;
+      min-width: 150px;
     }
-
-    /* Preview container */
-    #preview-container {
-      background: #fff;
+    label {
+      margin-bottom: 4px;
+      font-weight: bold;
+    }
+    input, select {
+      padding: 6px;
+      font-size: 16px;
       border: 1px solid #ccc;
-      height: 200px;
-      position: relative;
-      margin-top: 24px;
       border-radius: 4px;
     }
-
+    .button {
+      padding: 8px 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 4px;
+      background: #18C1F3;
+      color: #fff;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .button.secondary {
+      background: #6969F3;
+    }
+    .button.danger {
+      background: #d9534f;
+      padding: 4px 8px;
+      font-size: 14px;
+    }
+    .button:hover {
+      opacity: 0.9;
+    }
+    #keyframes-container .keyframe {
+      border: 1px solid #ccc;
+      background: #fafafa;
+      padding: 8px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+    }
+    #keyframes-container .keyframe label {
+      margin: 4px 0;
+    }
+    /* Preview size set to v1 dimensions (approx 160px high) */
+    #preview-container {
+      position: relative;
+      background: #fff;
+      border: 1px solid #ccc;
+      height: 160px;
+      border-radius: 4px;
+      margin-top: 16px;
+    }
     #animated-element {
       width: 40px;
       height: 40px;
       background: #F66633;
       position: absolute;
-      top: 80px;
+      top: 60px;
       left: 20px;
       border-radius: 4px;
     }
-
-    .keyframe-item {
-      margin-bottom: 12px;
-      background: #fff;
-      border: 1px solid #ccc;
-      padding: 8px;
-      border-radius: 4px;
-      margin-top: 10px;
-    }
-
-    #generated-css {
+    pre {
       background: #eee;
       padding: 10px;
-      white-space: pre;
-      margin-top: 16px;
       border-radius: 4px;
+      overflow-x: auto;
+      white-space: pre-wrap;
     }
-
-    /* Some small improvements to remove button styling */
-    .remove-btn {
-      background: #d9534f;
-      border: 1px solid #d43f3a;
-      margin-top: 6px;
+    /* Style for copy button */
+    #copy-css {
+      margin-top: 8px;
     }
-
   </style>
 </head>
 <body>
-  <div class="header">
-    <div class="container">
-      <h1>CSS Animation Playground</h1>
-    </div>
-  </div>
-
   <div class="container">
-
-    <div class="section flex-row">
-      <!-- Panel 1: Animation Controls -->
-      <div class="panel">
-        <h2>Animation Properties</h2>
+    <header>
+      <h1>CSS Animation Playground</h1>
+    </header>
+    
+    <div class="section" id="animation-properties">
+      <div class="controls">
         <div class="form-group">
           <label for="duration">Duration (s)</label>
           <input type="number" id="duration" min="0" step="0.1" value="1">
@@ -177,8 +147,8 @@
           <input type="number" id="delay" min="0" step="0.1" value="0">
         </div>
         <div class="form-group">
-          <label for="iterationCount">Iteration Count</label>
-          <input type="number" id="iterationCount" min="1" value="1">
+          <label for="iterationCount">Iteration Count (0 = infinite)</label>
+          <input type="number" id="iterationCount" min="0" value="1">
         </div>
         <div class="form-group">
           <label for="direction">Direction</label>
@@ -199,43 +169,48 @@
           </select>
         </div>
       </div>
-
-      <!-- Panel 2: Keyframes -->
-      <div class="panel">
-        <h2>Keyframes</h2>
-        <div id="keyframes-container"></div>
-        <button class="button" id="add-keyframe">Add Keyframe</button>
-      </div>
     </div>
-
-    <div class="section">
+    
+    <div class="section" id="keyframes-section">
+      <h2>Keyframes</h2>
+      <div id="keyframes-container"></div>
+      <button type="button" class="button secondary" id="add-keyframe">Add Keyframe</button>
+    </div>
+    
+    <div class="section" id="preview-section">
       <h2>Preview</h2>
       <div id="preview-container">
+        <!-- Inject keyframes dynamically here -->
+        <style id="keyframes-style"></style>
         <div id="animated-element"></div>
       </div>
-      <button class="button" id="replay">Replay Animation</button>
+      <button type="button" class="button" id="replay">Replay Animation</button>
     </div>
-
-    <div class="section">
+    
+    <div class="section" id="generated-css-section">
       <h2>Generated CSS</h2>
-      <div id="generated-css"></div>
+      <pre id="generated-css"></pre>
+      <button type="button" class="button" id="copy-css" aria-label="Copy generated CSS to clipboard">Copy to Clipboard</button>
     </div>
   </div>
-
-  <script type="module">
+  
+  <script>
+    // Updated default animation state: 3 keyframes with looping (0 and 1 share the same transform)
     const animationProperties = {
       duration: 1,
       timingFunction: 'ease',
       delay: 0,
-      iterationCount: 1,
+      iterationCount: 0,
       direction: 'normal',
       fillMode: 'none',
       keyframes: [
         { offset: 0, transform: 'translateX(0)' },
-        { offset: 1, transform: 'translateX(100px)' }
+        { offset: 0.5, transform: 'translateX(100px)' },
+        { offset: 1, transform: 'translateX(0)' }
       ]
     };
 
+    // DOM elements
     const durationInput = document.getElementById('duration');
     const timingFunctionSelect = document.getElementById('timingFunction');
     const delayInput = document.getElementById('delay');
@@ -244,121 +219,187 @@
     const fillModeSelect = document.getElementById('fillMode');
     const keyframesContainer = document.getElementById('keyframes-container');
     const animatedElement = document.getElementById('animated-element');
-    const generatedCss = document.getElementById('generated-css');
+    const keyframesStyle = document.getElementById('keyframes-style');
+    const generatedCssEl = document.getElementById('generated-css');
     const addKeyframeBtn = document.getElementById('add-keyframe');
     const replayBtn = document.getElementById('replay');
+    const copyCssBtn = document.getElementById('copy-css');
 
-    function updatePropertiesFromInputs() {
-      animationProperties.duration = parseFloat(durationInput.value);
-      animationProperties.timingFunction = timingFunctionSelect.value;
-      animationProperties.delay = parseFloat(delayInput.value);
-      animationProperties.iterationCount = parseInt(iterationCountInput.value);
-      animationProperties.direction = directionSelect.value;
-      animationProperties.fillMode = fillModeSelect.value;
+    // List of preset transform options
+    const transformPresets = [
+      { label: 'Custom', value: 'custom' },
+      { label: 'translateX(0)', value: 'translateX(0)' },
+      { label: 'translateX(100px)', value: 'translateX(100px)' },
+      { label: 'translateY(100px)', value: 'translateY(100px)' },
+      { label: 'rotate(45deg)', value: 'rotate(45deg)' },
+      { label: 'scale(1)', value: 'scale(1)' },
+      { label: 'scale(1.5)', value: 'scale(1.5)' }
+    ];
 
-      render();
+    // Update the preview element's animation style and inject keyframes CSS
+    function updatePreview() {
+      const iterCount = animationProperties.iterationCount === 0 ? 'infinite' : animationProperties.iterationCount;
+      const keyframesCSS = animationProperties.keyframes.map(kf => {
+        const percentage = Math.round(kf.offset * 100);
+        return `${percentage}% { transform: ${kf.transform}; }`;
+      }).join('\n  ');
+      
+      const fullKeyframesCSS = `@keyframes myAnimation {\n  ${keyframesCSS}\n}`;
+      keyframesStyle.innerHTML = fullKeyframesCSS;
+      
+      animatedElement.style.animation = `myAnimation ${animationProperties.duration}s ${animationProperties.timingFunction} ${animationProperties.delay}s ${iterCount} ${animationProperties.direction} ${animationProperties.fillMode}`;
     }
-
+    
+    // Generate the full CSS code for display
+    function updateGeneratedCSS() {
+      const iterCount = animationProperties.iterationCount === 0 ? 'infinite' : animationProperties.iterationCount;
+      const keyframesCSS = animationProperties.keyframes.map(kf => {
+        const percentage = Math.round(kf.offset * 100);
+        return `${percentage}% { transform: ${kf.transform}; }`;
+      }).join('\n  ');
+      
+      const cssCode = `@keyframes myAnimation {\n  ${keyframesCSS}\n}\n\n.animated-element {\n  animation: myAnimation ${animationProperties.duration}s ${animationProperties.timingFunction} ${animationProperties.delay}s ${iterCount} ${animationProperties.direction} ${animationProperties.fillMode};\n}`;
+      generatedCssEl.textContent = cssCode;
+    }
+    
+    // Render keyframes UI
     function renderKeyframes() {
       keyframesContainer.innerHTML = '';
       animationProperties.keyframes.forEach((kf, index) => {
         const wrapper = document.createElement('div');
-        wrapper.className = 'keyframe-item';
+        wrapper.className = 'keyframe';
 
-        const offsetLabel = document.createElement('label');
-        offsetLabel.textContent = `Keyframe #${index + 1} (Offset 0 to 1)`;
-        wrapper.appendChild(offsetLabel);
-
+        // Label for keyframe
+        const label = document.createElement('label');
+        label.textContent = `Keyframe ${index + 1} (Offset 0-1)`;
+        wrapper.appendChild(label);
+        
+        // Offset input
         const offsetInput = document.createElement('input');
         offsetInput.type = 'number';
         offsetInput.min = '0';
         offsetInput.max = '1';
         offsetInput.step = '0.1';
         offsetInput.value = kf.offset;
-        offsetInput.oninput = () => {
+        offsetInput.addEventListener('input', () => {
           animationProperties.keyframes[index].offset = parseFloat(offsetInput.value);
           render();
-        };
+        });
         wrapper.appendChild(offsetInput);
-
+        
+        // Transform input
         const transformLabel = document.createElement('label');
         transformLabel.textContent = 'Transform';
         transformLabel.style.marginTop = '6px';
         wrapper.appendChild(transformLabel);
-
+        
         const transformInput = document.createElement('input');
         transformInput.type = 'text';
         transformInput.value = kf.transform;
-        transformInput.oninput = () => {
+        transformInput.addEventListener('input', () => {
           animationProperties.keyframes[index].transform = transformInput.value;
           render();
-        };
+        });
         wrapper.appendChild(transformInput);
-
-        const removeButton = document.createElement('button');
-        removeButton.textContent = 'Remove';
-        removeButton.className = 'button remove-btn';
-        removeButton.onclick = () => {
+        
+        // Preset select for transform options
+        const presetSelect = document.createElement('select');
+        presetSelect.style.marginTop = '6px';
+        transformPresets.forEach(preset => {
+          const option = document.createElement('option');
+          option.value = preset.value;
+          option.textContent = preset.label;
+          presetSelect.appendChild(option);
+        });
+        // Set select value based on keyframe transform or default to "custom"
+        const match = transformPresets.find(p => p.value === kf.transform);
+        presetSelect.value = match ? match.value : 'custom';
+        presetSelect.addEventListener('change', () => {
+          if (presetSelect.value !== 'custom') {
+            transformInput.value = presetSelect.value;
+            animationProperties.keyframes[index].transform = presetSelect.value;
+            render();
+          }
+        });
+        wrapper.appendChild(presetSelect);
+        
+        // Remove button (v1 style, with just an "X")
+        const removeBtn = document.createElement('button');
+        removeBtn.textContent = 'X';
+        removeBtn.className = 'button danger';
+        removeBtn.type = 'button';
+        removeBtn.addEventListener('click', () => {
           animationProperties.keyframes.splice(index, 1);
           render();
-        };
-        wrapper.appendChild(removeButton);
-
+        });
+        wrapper.appendChild(removeBtn);
+        
         keyframesContainer.appendChild(wrapper);
       });
     }
-
-    function generateCSS() {
-      const {
-        duration,
-        timingFunction,
-        delay,
-        iterationCount,
-        direction,
-        fillMode,
-        keyframes
-      } = animationProperties;
-
-      const keyframesCSS = keyframes
-        .map(kf => {
-          const offsetPercent = Math.round(kf.offset * 100);
-          return `${offsetPercent}% { transform: ${kf.transform}; }`;
-        })
-        .join('\n  ');
-
-      return `@keyframes myAnimation {\n  ${keyframesCSS}\n}\n\n.animated-element {\n  animation: myAnimation ${duration}s ${timingFunction} ${delay}s ${iterationCount} ${direction} ${fillMode};\n}`;
+    
+    // Update state from inputs and render everything
+    function render() {
+      animationProperties.duration = parseFloat(durationInput.value);
+      animationProperties.timingFunction = timingFunctionSelect.value;
+      animationProperties.delay = parseFloat(delayInput.value);
+      animationProperties.iterationCount = parseInt(iterationCountInput.value);
+      animationProperties.direction = directionSelect.value;
+      animationProperties.fillMode = fillModeSelect.value;
+      
+      renderKeyframes();
+      updatePreview();
+      updateGeneratedCSS();
     }
-
-    function applyAnimation() {
+    
+    // Replay the animation by forcing a reflow
+    function replayAnimation() {
       animatedElement.style.animation = 'none';
       void animatedElement.offsetWidth;
-      animatedElement.style.animation = `myAnimation ${animationProperties.duration}s ${animationProperties.timingFunction} ${animationProperties.delay}s ${animationProperties.iterationCount} ${animationProperties.direction} ${animationProperties.fillMode}`;
+      updatePreview();
     }
-
-    function render() {
-      renderKeyframes();
-      const cssText = generateCSS();
-      generatedCss.textContent = cssText;
-      applyAnimation();
+    
+    // Copy generated CSS to clipboard
+    function copyGeneratedCSS() {
+      const cssText = generatedCssEl.textContent;
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(cssText)
+          .then(() => alert('Copied to clipboard!'))
+          .catch(err => alert('Error copying text: ' + err));
+      } else {
+        // Fallback for older browsers
+        const textarea = document.createElement('textarea');
+        textarea.value = cssText;
+        textarea.style.position = 'absolute';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+          document.execCommand('copy');
+          alert('Copied to clipboard!');
+        } catch (err) {
+          alert('Error copying text: ' + err);
+        }
+        document.body.removeChild(textarea);
+      }
     }
-
-    // Event listeners
-    durationInput.addEventListener('input', updatePropertiesFromInputs);
-    timingFunctionSelect.addEventListener('change', updatePropertiesFromInputs);
-    delayInput.addEventListener('input', updatePropertiesFromInputs);
-    iterationCountInput.addEventListener('input', updatePropertiesFromInputs);
-    directionSelect.addEventListener('change', updatePropertiesFromInputs);
-    fillModeSelect.addEventListener('change', updatePropertiesFromInputs);
-
+    
+    // Event listeners for property inputs
+    durationInput.addEventListener('input', render);
+    timingFunctionSelect.addEventListener('change', render);
+    delayInput.addEventListener('input', render);
+    iterationCountInput.addEventListener('input', render);
+    directionSelect.addEventListener('change', render);
+    fillModeSelect.addEventListener('change', render);
+    
     addKeyframeBtn.addEventListener('click', () => {
       animationProperties.keyframes.push({ offset: 1, transform: 'translateX(0)' });
       render();
     });
-
-    replayBtn.addEventListener('click', () => {
-      applyAnimation();
-    });
-
+    
+    replayBtn.addEventListener('click', replayAnimation);
+    copyCssBtn.addEventListener('click', copyGeneratedCSS);
+    
     // Initial render
     render();
   </script>
