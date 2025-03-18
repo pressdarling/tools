@@ -3,316 +3,364 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CSS Animation Playground - Updated</title>
+  <title>CSS Animation Playground - Improved</title>
   <style>
-* {
-  box-sizing: border-box;
-}
+    * {
+      box-sizing: border-box;
+    }
 
-body {
-  margin: 0;
-  padding: 0;
-  font-family: Helvetica, sans-serif;
-  background: #f5f5f5;
-}
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Helvetica, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+    }
 
-.container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
-}
+    .header {
+      background: #18C1F3; /* mild accent */
+      color: #fff;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
 
-h1 {
-  margin-bottom: 16px;
-}
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 20px;
+    }
 
-label {
-  display: block;
-  margin-top: 12px;
-  margin-bottom: 4px;
-}
+    .section {
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+      padding: 16px;
+      margin-bottom: 20px;
+    }
 
-input,
-select,
-textarea {
-  font-size: 16px;
-  font-family: Helvetica, sans-serif;
-  padding: 6px;
-  margin-bottom: 8px;
-  width: 100%;
-  max-width: 260px;
-}
+    h2 {
+      margin-top: 0;
+    }
 
-.button {
-  display: inline-block;
-  padding: 6px 12px;
-  margin: 4px 8px 4px 0;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-  font-family: Helvetica, sans-serif;
-  background: #007bff;
-  color: #fff;
-  border-radius: 4px;
-}
+    label {
+      display: block;
+      margin-top: 12px;
+      margin-bottom: 4px;
+    }
 
-.button:hover {
-  background: #0056b3;
-}
+    input,
+    select,
+    textarea {
+      font-size: 16px;
+      font-family: Helvetica, sans-serif;
+      padding: 6px;
+      margin-bottom: 8px;
+      width: 100%;
+      max-width: 260px;
+    }
 
-#controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  align-items: flex-end;
-}
+    .button {
+      display: inline-block;
+      padding: 6px 12px;
+      margin: 4px 8px 4px 0;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      font-family: Helvetica, sans-serif;
+      background: #007bff;
+      color: #fff;
+      border-radius: 4px;
+    }
 
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
+    .button:hover {
+      background: #0056b3;
+    }
 
-#preview-container {
-  background: #fff;
-  border: 1px solid #ccc;
-  height: 200px;
-  position: relative;
-  margin-top: 24px;
-  border-radius: 4px;
-}
+    /* Layout for controls and keyframes side by side */
+    .flex-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      align-items: flex-start;
+    }
 
-#animated-element {
-  width: 40px;
-  height: 40px;
-  background: #F66633;
-  position: absolute;
-  top: 80px;
-  left: 20px;
-  border-radius: 4px;
-}
+    .panel {
+      flex: 1;
+      min-width: 280px;
+    }
 
-.keyframe-item {
-  margin-bottom: 12px;
-  background: #fff;
-  border: 1px solid #ccc;
-  padding: 8px;
-  border-radius: 4px;
-}
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 12px;
+    }
 
-#generated-css {
-  background: #eee;
-  padding: 10px;
-  white-space: pre;
-  margin-top: 16px;
-  border-radius: 4px;
-}
+    /* Preview container */
+    #preview-container {
+      background: #fff;
+      border: 1px solid #ccc;
+      height: 200px;
+      position: relative;
+      margin-top: 24px;
+      border-radius: 4px;
+    }
+
+    #animated-element {
+      width: 40px;
+      height: 40px;
+      background: #F66633;
+      position: absolute;
+      top: 80px;
+      left: 20px;
+      border-radius: 4px;
+    }
+
+    .keyframe-item {
+      margin-bottom: 12px;
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 8px;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+
+    #generated-css {
+      background: #eee;
+      padding: 10px;
+      white-space: pre;
+      margin-top: 16px;
+      border-radius: 4px;
+    }
+
+    /* Some small improvements to remove button styling */
+    .remove-btn {
+      background: #d9534f;
+      border: 1px solid #d43f3a;
+      margin-top: 6px;
+    }
+
   </style>
 </head>
 <body>
+  <div class="header">
+    <div class="container">
+      <h1>CSS Animation Playground</h1>
+    </div>
+  </div>
+
   <div class="container">
-    <h1>CSS Animation Playground</h1>
-    <div id="controls">
-      <div class="form-group">
-        <label for="duration">Duration (s)</label>
-        <input type="number" id="duration" min="0" step="0.1" value="1">
+
+    <div class="section flex-row">
+      <!-- Panel 1: Animation Controls -->
+      <div class="panel">
+        <h2>Animation Properties</h2>
+        <div class="form-group">
+          <label for="duration">Duration (s)</label>
+          <input type="number" id="duration" min="0" step="0.1" value="1">
+        </div>
+        <div class="form-group">
+          <label for="timingFunction">Timing Function</label>
+          <select id="timingFunction">
+            <option value="ease">ease</option>
+            <option value="linear">linear</option>
+            <option value="ease-in">ease-in</option>
+            <option value="ease-out">ease-out</option>
+            <option value="ease-in-out">ease-in-out</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="delay">Delay (s)</label>
+          <input type="number" id="delay" min="0" step="0.1" value="0">
+        </div>
+        <div class="form-group">
+          <label for="iterationCount">Iteration Count</label>
+          <input type="number" id="iterationCount" min="1" value="1">
+        </div>
+        <div class="form-group">
+          <label for="direction">Direction</label>
+          <select id="direction">
+            <option value="normal">normal</option>
+            <option value="reverse">reverse</option>
+            <option value="alternate">alternate</option>
+            <option value="alternate-reverse">alternate-reverse</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="fillMode">Fill Mode</label>
+          <select id="fillMode">
+            <option value="none">none</option>
+            <option value="forwards">forwards</option>
+            <option value="backwards">backwards</option>
+            <option value="both">both</option>
+          </select>
+        </div>
       </div>
-      <div class="form-group">
-        <label for="timingFunction">Timing Function</label>
-        <select id="timingFunction">
-          <option value="ease">ease</option>
-          <option value="linear">linear</option>
-          <option value="ease-in">ease-in</option>
-          <option value="ease-out">ease-out</option>
-          <option value="ease-in-out">ease-in-out</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="delay">Delay (s)</label>
-        <input type="number" id="delay" min="0" step="0.1" value="0">
-      </div>
-      <div class="form-group">
-        <label for="iterationCount">Iteration Count</label>
-        <input type="number" id="iterationCount" min="1" value="1">
-      </div>
-      <div class="form-group">
-        <label for="direction">Direction</label>
-        <select id="direction">
-          <option value="normal">normal</option>
-          <option value="reverse">reverse</option>
-          <option value="alternate">alternate</option>
-          <option value="alternate-reverse">alternate-reverse</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="fillMode">Fill Mode</label>
-        <select id="fillMode">
-          <option value="none">none</option>
-          <option value="forwards">forwards</option>
-          <option value="backwards">backwards</option>
-          <option value="both">both</option>
-        </select>
+
+      <!-- Panel 2: Keyframes -->
+      <div class="panel">
+        <h2>Keyframes</h2>
+        <div id="keyframes-container"></div>
+        <button class="button" id="add-keyframe">Add Keyframe</button>
       </div>
     </div>
 
-    <h2 style="margin-top: 24px;">Keyframes</h2>
-    <div id="keyframes-container"></div>
-    <button class="button" id="add-keyframe">Add Keyframe</button>
-
-    <div id="preview-container">
-      <div id="animated-element"></div>
+    <div class="section">
+      <h2>Preview</h2>
+      <div id="preview-container">
+        <div id="animated-element"></div>
+      </div>
+      <button class="button" id="replay">Replay Animation</button>
     </div>
-    <button class="button" id="replay">Replay Animation</button>
 
-    <div id="generated-css"></div>
+    <div class="section">
+      <h2>Generated CSS</h2>
+      <div id="generated-css"></div>
+    </div>
   </div>
 
   <script type="module">
-const animationProperties = {
-  duration: 1,
-  timingFunction: 'ease',
-  delay: 0,
-  iterationCount: 1,
-  direction: 'normal',
-  fillMode: 'none',
-  keyframes: [
-    { offset: 0, transform: 'translateX(0)' },
-    { offset: 1, transform: 'translateX(100px)' }
-  ]
-};
-
-const durationInput = document.getElementById('duration');
-const timingFunctionSelect = document.getElementById('timingFunction');
-const delayInput = document.getElementById('delay');
-const iterationCountInput = document.getElementById('iterationCount');
-const directionSelect = document.getElementById('direction');
-const fillModeSelect = document.getElementById('fillMode');
-const keyframesContainer = document.getElementById('keyframes-container');
-const animatedElement = document.getElementById('animated-element');
-const generatedCss = document.getElementById('generated-css');
-const addKeyframeBtn = document.getElementById('add-keyframe');
-const replayBtn = document.getElementById('replay');
-
-function updatePropertiesFromInputs() {
-  animationProperties.duration = parseFloat(durationInput.value);
-  animationProperties.timingFunction = timingFunctionSelect.value;
-  animationProperties.delay = parseFloat(delayInput.value);
-  animationProperties.iterationCount = parseInt(iterationCountInput.value);
-  animationProperties.direction = directionSelect.value;
-  animationProperties.fillMode = fillModeSelect.value;
-
-  render();
-}
-
-function renderKeyframes() {
-  keyframesContainer.innerHTML = '';
-  animationProperties.keyframes.forEach((kf, index) => {
-    const wrapper = document.createElement('div');
-    wrapper.className = 'keyframe-item';
-
-    const offsetLabel = document.createElement('label');
-    offsetLabel.textContent = `Keyframe #${index + 1} (Offset 0 to 1)`;
-    wrapper.appendChild(offsetLabel);
-
-    const offsetInput = document.createElement('input');
-    offsetInput.type = 'number';
-    offsetInput.min = '0';
-    offsetInput.max = '1';
-    offsetInput.step = '0.1';
-    offsetInput.value = kf.offset;
-    offsetInput.oninput = () => {
-      animationProperties.keyframes[index].offset = parseFloat(offsetInput.value);
-      render();
+    const animationProperties = {
+      duration: 1,
+      timingFunction: 'ease',
+      delay: 0,
+      iterationCount: 1,
+      direction: 'normal',
+      fillMode: 'none',
+      keyframes: [
+        { offset: 0, transform: 'translateX(0)' },
+        { offset: 1, transform: 'translateX(100px)' }
+      ]
     };
-    wrapper.appendChild(offsetInput);
 
-    const transformLabel = document.createElement('label');
-    transformLabel.textContent = 'Transform';
-    transformLabel.style.marginTop = '6px';
-    wrapper.appendChild(transformLabel);
+    const durationInput = document.getElementById('duration');
+    const timingFunctionSelect = document.getElementById('timingFunction');
+    const delayInput = document.getElementById('delay');
+    const iterationCountInput = document.getElementById('iterationCount');
+    const directionSelect = document.getElementById('direction');
+    const fillModeSelect = document.getElementById('fillMode');
+    const keyframesContainer = document.getElementById('keyframes-container');
+    const animatedElement = document.getElementById('animated-element');
+    const generatedCss = document.getElementById('generated-css');
+    const addKeyframeBtn = document.getElementById('add-keyframe');
+    const replayBtn = document.getElementById('replay');
 
-    const transformInput = document.createElement('input');
-    transformInput.type = 'text';
-    transformInput.value = kf.transform;
-    transformInput.oninput = () => {
-      animationProperties.keyframes[index].transform = transformInput.value;
+    function updatePropertiesFromInputs() {
+      animationProperties.duration = parseFloat(durationInput.value);
+      animationProperties.timingFunction = timingFunctionSelect.value;
+      animationProperties.delay = parseFloat(delayInput.value);
+      animationProperties.iterationCount = parseInt(iterationCountInput.value);
+      animationProperties.direction = directionSelect.value;
+      animationProperties.fillMode = fillModeSelect.value;
+
       render();
-    };
-    wrapper.appendChild(transformInput);
+    }
 
-    const removeButton = document.createElement('button');
-    removeButton.textContent = 'Remove';
-    removeButton.className = 'button';
-    removeButton.style.marginTop = '6px';
-    removeButton.style.background = '#d9534f';
-    removeButton.style.border = '1px solid #d43f3a';
-    removeButton.onclick = () => {
-      animationProperties.keyframes.splice(index, 1);
+    function renderKeyframes() {
+      keyframesContainer.innerHTML = '';
+      animationProperties.keyframes.forEach((kf, index) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'keyframe-item';
+
+        const offsetLabel = document.createElement('label');
+        offsetLabel.textContent = `Keyframe #${index + 1} (Offset 0 to 1)`;
+        wrapper.appendChild(offsetLabel);
+
+        const offsetInput = document.createElement('input');
+        offsetInput.type = 'number';
+        offsetInput.min = '0';
+        offsetInput.max = '1';
+        offsetInput.step = '0.1';
+        offsetInput.value = kf.offset;
+        offsetInput.oninput = () => {
+          animationProperties.keyframes[index].offset = parseFloat(offsetInput.value);
+          render();
+        };
+        wrapper.appendChild(offsetInput);
+
+        const transformLabel = document.createElement('label');
+        transformLabel.textContent = 'Transform';
+        transformLabel.style.marginTop = '6px';
+        wrapper.appendChild(transformLabel);
+
+        const transformInput = document.createElement('input');
+        transformInput.type = 'text';
+        transformInput.value = kf.transform;
+        transformInput.oninput = () => {
+          animationProperties.keyframes[index].transform = transformInput.value;
+          render();
+        };
+        wrapper.appendChild(transformInput);
+
+        const removeButton = document.createElement('button');
+        removeButton.textContent = 'Remove';
+        removeButton.className = 'button remove-btn';
+        removeButton.onclick = () => {
+          animationProperties.keyframes.splice(index, 1);
+          render();
+        };
+        wrapper.appendChild(removeButton);
+
+        keyframesContainer.appendChild(wrapper);
+      });
+    }
+
+    function generateCSS() {
+      const {
+        duration,
+        timingFunction,
+        delay,
+        iterationCount,
+        direction,
+        fillMode,
+        keyframes
+      } = animationProperties;
+
+      const keyframesCSS = keyframes
+        .map(kf => {
+          const offsetPercent = Math.round(kf.offset * 100);
+          return `${offsetPercent}% { transform: ${kf.transform}; }`;
+        })
+        .join('\n  ');
+
+      return `@keyframes myAnimation {\n  ${keyframesCSS}\n}\n\n.animated-element {\n  animation: myAnimation ${duration}s ${timingFunction} ${delay}s ${iterationCount} ${direction} ${fillMode};\n}`;
+    }
+
+    function applyAnimation() {
+      animatedElement.style.animation = 'none';
+      void animatedElement.offsetWidth;
+      animatedElement.style.animation = `myAnimation ${animationProperties.duration}s ${animationProperties.timingFunction} ${animationProperties.delay}s ${animationProperties.iterationCount} ${animationProperties.direction} ${animationProperties.fillMode}`;
+    }
+
+    function render() {
+      renderKeyframes();
+      const cssText = generateCSS();
+      generatedCss.textContent = cssText;
+      applyAnimation();
+    }
+
+    // Event listeners
+    durationInput.addEventListener('input', updatePropertiesFromInputs);
+    timingFunctionSelect.addEventListener('change', updatePropertiesFromInputs);
+    delayInput.addEventListener('input', updatePropertiesFromInputs);
+    iterationCountInput.addEventListener('input', updatePropertiesFromInputs);
+    directionSelect.addEventListener('change', updatePropertiesFromInputs);
+    fillModeSelect.addEventListener('change', updatePropertiesFromInputs);
+
+    addKeyframeBtn.addEventListener('click', () => {
+      animationProperties.keyframes.push({ offset: 1, transform: 'translateX(0)' });
       render();
-    };
-    wrapper.appendChild(removeButton);
+    });
 
-    keyframesContainer.appendChild(wrapper);
-  });
-}
+    replayBtn.addEventListener('click', () => {
+      applyAnimation();
+    });
 
-function generateCSS() {
-  const {
-    duration,
-    timingFunction,
-    delay,
-    iterationCount,
-    direction,
-    fillMode,
-    keyframes
-  } = animationProperties;
-
-  const keyframesCSS = keyframes
-    .map(kf => {
-      const offsetPercent = Math.round(kf.offset * 100);
-      return `${offsetPercent}% { transform: ${kf.transform}; }`;
-    })
-    .join('\n  ');
-
-  return `@keyframes myAnimation {\n  ${keyframesCSS}\n}\n\n.animated-element {\n  animation: myAnimation ${duration}s ${timingFunction} ${delay}s ${iterationCount} ${direction} ${fillMode};\n}`;
-}
-
-function applyAnimation() {
-  // Reset animation so we can replay
-  animatedElement.style.animation = 'none';
-  void animatedElement.offsetWidth;
-
-  // Apply new animation
-  animatedElement.style.animation = `myAnimation ${animationProperties.duration}s ${animationProperties.timingFunction} ${animationProperties.delay}s ${animationProperties.iterationCount} ${animationProperties.direction} ${animationProperties.fillMode}`;
-}
-
-function render() {
-  renderKeyframes();
-
-  const cssText = generateCSS();
-  generatedCss.textContent = cssText;
-
-  applyAnimation();
-}
-
-// Event listeners
-durationInput.addEventListener('input', updatePropertiesFromInputs);
-timingFunctionSelect.addEventListener('change', updatePropertiesFromInputs);
-delayInput.addEventListener('input', updatePropertiesFromInputs);
-iterationCountInput.addEventListener('input', updatePropertiesFromInputs);
-directionSelect.addEventListener('change', updatePropertiesFromInputs);
-fillModeSelect.addEventListener('change', updatePropertiesFromInputs);
-
-addKeyframeBtn.addEventListener('click', () => {
-  animationProperties.keyframes.push({ offset: 1, transform: 'translateX(0)' });
-  render();
-});
-
-replayBtn.addEventListener('click', () => {
-  applyAnimation();
-});
-
-// Initial render
-render();
+    // Initial render
+    render();
   </script>
 </body>
 </html>
