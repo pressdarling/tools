@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSS Animation Performance Explorer</title>
+  <style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+    color: #333;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  h1, h2, h3 {
+    color: #2c3e50;
+  }
+
+  h1 {
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 10px;
+  }
+
+  .container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  @media (max-width: 768px) {
+    .container {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .panel {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+  }
+
+  .animation-area {
+    position: relative;
+    height: 300px;
+    background-color: #ecf0f1;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 15px;
+  }
+
+  .element {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    background-color: #3498db;
+    border-radius: 4px;
+    top: 125px;
+    left: 20px;
+  }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: Helvetica, Arial, sans-serif;
+    transition: background-color 0.2s;
+  }
+
+  button:hover {
+    background-color: #2980b9;
+  }
+
+  button.active {
+    background-color: #2c3e50;
+  }
+
+  button.start {
+    background-color: #2ecc71;
+  }
+
+  button.start:hover {
+    background-color: #27ae60;
+  }
+
+  button.stop {
+    background-color: #e74c3c;
+  }
+
+  button.stop:hover {
+    background-color: #c0392b;
+  }
+
+  .performance-metrics {
+    margin-top: 20px;
+    font-size: 14px;
+  }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .metric {
+    background-color: white;
+    padding: 8px;
+    border-radius: 4px;
+    border-left: 4px solid #3498db;
+  }
+
+  .metric-value {
+    font-weight: bold;
+    font-size: 18px;
+  }
+
+  textarea, input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    font-family: Helvetica, monospace;
+    margin-bottom: 10px;
+  }
+
+  textarea {
+    height: 120px;
+    resize: vertical;
+  }
+
+  .tips {
+    border-left: 4px solid #f39c12;
+    padding-left: 15px;
+    margin: 20px 0;
+  }
+
+  .animation-details {
+    margin-top: 15px;
+    font-family: monospace;
+    background-color: #f5f5f5;
+    padding: 10px;
+    border-radius: 4px;
+    overflow-x: auto;
+  }
+
+  .log-container {
+    max-height: 200px;
+    overflow-y: auto;
+    background-color: #2c3e50;
+    color: #ecf0f1;
+    padding: 10px;
+    border-radius: 4px;
+    font-family: monospace;
+    margin-top: 15px;
+  }
+
+  .log-entry {
+    margin-bottom: 5px;
+    border-bottom: 1px solid #34495e;
+    padding-bottom: 5px;
+  }
+
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 20px;
+  }
+
+  .tab {
+    padding: 10px 15px;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+  }
+
+  .tab.active {
+    border-bottom-color: #3498db;
+    font-weight: bold;
+  }
+
+  .tab-content {
+    display: none;
+  }
+
+  .tab-content.active {
+    display: block;
+  }
+
+  .gpu-info {
+    background-color: #eefaff;
+    border-left: 4px solid #3498db;
+    padding: 10px;
+    margin-top: 15px;
+  }
+
+  .warning {
+    background-color: #fff5f5;
+    border-left: 4px solid #e74c3c;
+    padding: 10px;
+    margin-top: 15px;
+  }
+
+  .code-block {
+    background-color: #f8f8f8;
+    border-left: 4px solid #3498db;
+    padding: 10px;
+    margin: 15px 0;
+    font-family: monospace;
+    overflow-x: auto;
+  }
+  </style>
+</head>
+<body>
+  <h1>CSS Animation Performance Explorer</h1>
+  
+  <div class="tabs">
+    <div class="tab active" data-tab="overview">Overview</div>
+    <div class="tab" data-tab="playground">Animation Playground</div>
+    <div class="tab" data-tab="advanced">Advanced Techniques</div>
+    <div class="tab" data-tab="measuring">Measuring Performance</div>
+  </div>
+
+  <div class="tab-content active" id="overview">
+    <div class="panel">
+      <h2>Understanding CSS Animation Performance</h2>
+      <p>Not all CSS properties are created equal when it comes to animation performance. The browser goes through several steps when rendering and animating elements:</p>
+      
+      <ol>
+        <li><strong>Layout</strong> (or Reflow): Calculates the position and size of elements</li>
+        <li><strong>Paint</strong>: Fills in pixels for the elements</li>
+        <li><strong>Composite</strong>: Combines the painted layers into the final image shown on screen</li>
+      </ol>
+      
+      <p>Different CSS properties trigger different parts of this pipeline:</p>
+      
+      <div class="performance-category">
+        <h3>🚀 Most Performant: Transform and Opacity</h3>
+        <p>Only triggers compositing, avoiding layout and paint</p>
+        <div class="code-block">transform: translate(), scale(), rotate(), etc.<br>opacity</div>
+      </div>
+      
+      <div class="performance-category">
+        <h3>⚠️ Medium Impact: Paint-only Properties</h3>
+        <p>Triggers paint but not layout</p>
+        <div class="code-block">background-color, box-shadow, border-color, etc.</div>
+      </div>
+      
+      <div class="performance-category">
+        <h3>🛑 Highest Impact: Layout Properties</h3>
+        <p>Triggers the entire pipeline (layout, paint, and composite)</p>
+        <div class="code-block">width, height, top, left, margin, padding, font-size, etc.</div>
+      </div>
+      
+      <div class="gpu-info">
+        <h3>💡 GPU Acceleration</h3>
+        <p>Properties like <code>transform</code> and <code>opacity</code> can be hardware-accelerated by the GPU when used with <code>will-change</code> or <code>transform: translateZ(0)</code> (also known as the "hack" to force GPU rendering).</p>
+      </div>
+
+      <div class="warning">
+        <h3>⚠️ Overusing will-change</h3>
+        <p>While <code>will-change</code> can improve performance, using it on too many elements can actually harm performance by consuming excessive memory. Use it sparingly and only on elements that will actually change.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="playground">
+    <div class="container">
+      <div class="panel">
+        <h2>Animation Playground</h2>
+        <div class="animation-area">
+          <div class="element" id="animatedElement"></div>
+        </div>
+        
+        <h3>Preset Animations</h3>
+        <div class="controls">
+          <button class="preset-btn" data-preset="transform">Transform (Best)</button>
+          <button class="preset-btn" data-preset="opacity">Opacity (Best)</button>
+          <button class="preset-btn" data-preset="backgroundcolor">Background Color (Medium)</button>
+          <button class="preset-btn" data-preset="boxshadow">Box Shadow (Medium)</button>
+          <button class="preset-btn" data-preset="width">Width (Worst)</button>
+          <button class="preset-btn" data-preset="top">Position Top (Worst)</button>
+          <button class="preset-btn" data-preset="margin">Margin (Worst)</button>
+          <button class="preset-btn" data-preset="combined-good">Combined Good Properties</button>
+          <button class="preset-btn" data-preset="combined-bad">Combined Bad Properties</button>
+        </div>
+        
+        <h3>Custom Animation</h3>
+        <textarea id="customCSS" placeholder="Enter custom CSS animation, e.g.:
+@keyframes customAnimation {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(200px); }
+}
+
+animation: customAnimation 1s linear infinite alternate;"></textarea>
+        <button id="applyCustom">Apply Custom Animation</button>
+        
+        <div class="animation-details">
+          <h3>Current Animation</h3>
+          <pre id="currentAnimation">No animation selected</pre>
+        </div>
+      </div>
+      
+      <div class="panel">
+        <h2>Performance Metrics</h2>
+        <div class="controls">
+          <button id="startBtn" class="start">Start Animation</button>
+          <button id="stopBtn" class="stop">Stop Animation</button>
+          <button id="resetMetrics">Reset Metrics</button>
+        </div>
+        
+        <div class="performance-metrics">
+          <h3>Real-time Metrics</h3>
+          <div class="metrics-grid">
+            <div class="metric">
+              <div>FPS</div>
+              <div class="metric-value" id="fps">0</div>
+            </div>
+            <div class="metric">
+              <div>Frame Time</div>
+              <div class="metric-value" id="frameTime">0 ms</div>
+            </div>
+            <div class="metric">
+              <div>CPU Usage</div>
+              <div class="metric-value" id="cpuUsage">0%</div>
+            </div>
+            <div class="metric">
+              <div>Min FPS</div>
+              <div class="metric-value" id="minFPS">-</div>
+            </div>
+            <div class="metric">
+              <div>Max Frame Time</div>
+              <div class="metric-value" id="maxFrameTime">-</div>
+            </div>
+            <div class="metric">
+              <div>Janky Frames</div>
+              <div class="metric-value" id="jankyFrames">0</div>
+            </div>
+          </div>
+          
+          <h3>Performance Log</h3>
+          <div class="log-container" id="performanceLog"></div>
+          
+          <div class="tips">
+            <h3>Understanding These Metrics</h3>
+            <p><strong>FPS (Frames Per Second):</strong> Higher is better. Aim for 60 FPS for smooth animation.</p>
+            <p><strong>Frame Time:</strong> Lower is better. Under 16.7ms is needed to achieve 60 FPS.</p>
+            <p><strong>Janky Frames:</strong> Frames that took longer than 16.7ms to render. Fewer is better.</p>
+            <p><strong>CPU Usage:</strong> Estimated CPU impact. Lower is better.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="advanced">
+    <div class="panel">
+      <h2>Advanced Animation Techniques</h2>
+      
+      <h3>FLIP Technique</h3>
+      <p>FLIP stands for First, Last, Invert, Play. It's a technique for creating performant animations of layout changes:</p>
+      <ol>
+        <li><strong>First:</strong> Record the element's starting position</li>
+        <li><strong>Last:</strong> Update the element to its final position</li>
+        <li><strong>Invert:</strong> Apply a transform to make it appear at the starting position</li>
+        <li><strong>Play:</strong> Animate the transform to zero</li>
+      </ol>
+      <p>This converts expensive layout animations into performant transform animations.</p>
+      
+      <div class="code-block">
+// Example FLIP animation
+const el = document.querySelector('.box');
+// First - record the current position
+const first = el.getBoundingClientRect();
+
+// Last - move to final position (in DOM)
+el.classList.add('final-position');
+const last = el.getBoundingClientRect();
+
+// Invert - calculate the difference and apply transform
+const invert = {
+  x: first.left - last.left,
+  y: first.top - last.top
+};
+el.style.transform = `translate(${invert.x}px, ${invert.y}px)`;
+
+// Play - animate back to no transform
+requestAnimationFrame(() => {
+  el.style.transition = 'transform 0.5s';
+  el.style.transform = 'translate(0, 0)';
+});
+      </div>
+      
+      <h3>Using will-change strategically</h3>
+      <p>Add <code>will-change</code> just before an animation starts and remove it after:</p>
+      
+      <div class="code-block">
+// Add will-change before animation
+element.style.willChange = 'transform';
+
+// After animation completes
+element.addEventListener('transitionend', () => {
+  element.style.willChange = 'auto';
+}, { once: true });
+      </div>
+      
+      <h3>requestAnimationFrame for JavaScript animations</h3>
+      <p>When using JavaScript for animations, always use requestAnimationFrame instead of setTimeout/setInterval:</p>
+      
+      <div class="code-block">
+let startTime;
+function animate(timestamp) {
+  if (!startTime) startTime = timestamp;
+  const elapsed = timestamp - startTime;
+  
+  // Calculate the new position
+  const progress = Math.min(elapsed / 1000, 1);
+  element.style.transform = `translateX(${progress * 300}px)`;
+  
+  // Continue animation if not complete
+  if (progress < 1) {
+    requestAnimationFrame(animate);
+  }
+}
+
+requestAnimationFrame(animate);
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="measuring">
+    <div class="panel">
+      <h2>Measuring Performance in Dev Tools</h2>
+      
+      <h3>Chrome Performance Panel</h3>
+      <p>The Performance panel in Chrome DevTools is the most comprehensive way to analyze animation performance:</p>
+      
+      <ol>
+        <li>Open DevTools (F12 or Right-click > Inspect)</li>
+        <li>Go to the Performance tab</li>
+        <li>Click the record button (circle) or press Ctrl+E</li>
+        <li>Perform the animation you want to analyze</li>
+        <li>Stop recording and analyze the results</li>
+      </ol>
+      
+      <div class="tips">
+        <h3>What to Look For</h3>
+        <ul>
+          <li><strong>FPS Chart:</strong> Look for drops below 60 FPS (shown in red)</li>
+          <li><strong>CPU Chart:</strong> Shows CPU usage by category</li>
+          <li><strong>Main Thread:</strong> Look for long tasks that might cause jank</li>
+          <li><strong>Rendering Events:</strong> Look for Layout, Recalculate Style, and Paint events</li>
+        </ul>
+      </div>
+      
+      <h3>Frame Rendering Stats</h3>
+      <p>Chrome has a built-in FPS meter:</p>
+      <ol>
+        <li>Open Chrome DevTools</li>
+        <li>Press Ctrl+Shift+P (or Cmd+Shift+P on Mac)</li>
+        <li>Type "Rendering" and select "Show Rendering"</li>
+        <li>Check "Frame Rendering Stats" to show the FPS counter</li>
+      </ol>
+      
+      <h3>Paint Flashing</h3>
+      <p>To visualize which parts of the page are being repainted:</p>
+      <ol>
+        <li>Open the Rendering tab (as described above)</li>
+        <li>Check "Paint Flashing"</li>
+      </ol>
+      <p>Areas that flash green are being repainted. Less green flashing means better performance.</p>
+      
+      <h3>Layers Panel</h3>
+      <p>To see which elements have their own composite layers:</p>
+      <ol>
+        <li>Open DevTools</li>
+        <li>Press Ctrl+Shift+P (or Cmd+Shift+P on Mac)</li>
+        <li>Type "Layers" and select "Show Layers"</li>
+      </ol>
+      <p>This shows which elements have been promoted to their own layer. Elements with <code>will-change</code> or 3D transforms typically get their own layer.</p>
+    </div>
+  </div>
+
+  <script type="module">
+// Constants
+const FRAME_THRESHOLD = 16.7; // 60fps threshold in ms
+
+// Elements
+const element = document.getElementById('animatedElement');
+const customCSSInput = document.getElementById('customCSS');
+const currentAnimation = document.getElementById('currentAnimation');
+const performanceLog = document.getElementById('performanceLog');
+const fpsDisplay = document.getElementById('fps');
+const frameTimeDisplay = document.getElementById('frameTime');
+const cpuUsageDisplay = document.getElementById('cpuUsage');
+const minFPSDisplay = document.getElementById('minFPS');
+const maxFrameTimeDisplay = document.getElementById('maxFrameTime');
+const jankyFramesDisplay = document.getElementById('jankyFrames');
+
+// State
+let animationState = {
+  running: false,
+  frameCount: 0,
+  lastTimestamp: 0,
+  frameTimes: [],
+  jankyFrames: 0,
+  minFPS: Infinity,
+  maxFrameTime: 0,
+  currentPreset: null
+};
+
+// Predefined animations
+const animations = {
+  transform: {
+    name: "Transform Animation (Best)",
+    css: `
+@keyframes transformAnimation {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(calc(100% - 50px)); }
+}
+
+animation: transformAnimation 1.5s ease-in-out infinite alternate;`,
+    description: "Uses transform which only triggers compositing"
+  },
+  opacity: {
+    name: "Opacity Animation (Best)",
+    css: `
+@keyframes opacityAnimation {
+  0% { opacity: 1; }
+  100% { opacity: 0.3; }
+}
+
+animation: opacityAnimation 1.5s ease-in-out infinite alternate;`,
+    description: "Uses opacity which only triggers compositing"
+  },
+  backgroundcolor: {
+    name: "Background Color Animation (Medium)",
+    css: `
+@keyframes backgroundAnimation {
+  0% { background-color: #3498db; }
+  100% { background-color: #e74c3c; }
+}
+
+animation: backgroundAnimation 1.5s ease-in-out infinite alternate;`,
+    description: "Changes background color which triggers paint"
+  },
+  boxshadow: {
+    name: "Box Shadow Animation (Medium)",
+    css: `
+@keyframes shadowAnimation {
+  0% { box-shadow: 0 0 0 rgba(0,0,0,0.1); }
+  100% { box-shadow: 0 20px 25px rgba(0,0,0,0.3); }
+}
+
+animation: shadowAnimation 1.5s ease-in-out infinite alternate;`,
+    description: "Animates box-shadow which triggers paint"
+  },
+  width: {
+    name: "Width Animation (Worst)",
+    css: `
+@keyframes widthAnimation {
+  0% { width: 50px; }
+  100% { width: 200px; }
+}
+
+animation: widthAnimation 1.5s ease-in-out infinite alternate;`,
+    description: "Changes width which triggers layout, paint, and composite"
+  },
+  top: {
+    name: "Position Animation (Worst)",
+    css: `
+@keyframes positionAnimation {
+  0% { top: 125px; }
+  100% { top: 225px; }
+}
+
+animation: positionAnimation 1.5s ease-in-out infinite alternate;`,
+    description: "Changes top position which triggers layout, paint, and composite"
+  },
+  margin: {
+    name: "Margin Animation (Worst)",
+    css: `
+@keyframes marginAnimation {
+  0% { margin-left: 0; }
+  100% { margin-left: 200px; }
+}
+
+animation: marginAnimation 1.5s ease-in-out infinite alternate;`,
+    description: "Changes margin which triggers layout, paint, and composite"
+  },
+  "combined-good": {
+    name: "Combined Good Properties",
+    css: `
+@keyframes combinedGoodAnimation {
+  0% { 
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+  100% { 
+    transform: translateX(calc(100% - 50px)) scale(0.8);
+    opacity: 0.6;
+  }
+}
+
+animation: combinedGoodAnimation 1.5s ease-in-out infinite alternate;`,
+    description: "Combines transform and opacity which only trigger compositing"
+  },
+  "combined-bad": {
+    name: "Combined Bad Properties",
+    css: `
+@keyframes combinedBadAnimation {
+  0% { 
+    width: 50px;
+    height: 50px;
+    margin-left: 0;
+    background-color: #3498db;
+  }
+  100% { 
+    width: 100px;
+    height: 100px;
+    margin-left: 100px;
+    background-color: #e74c3c;
+  }
+}
+
+animation: combinedBadAnimation 1.5s ease-in-out infinite alternate;`,
+    description: "Combines multiple properties that trigger layout and paint"
+  }
+};
+
+// Set up tab switching
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    // Remove active class from all tabs and contents
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    
+    // Add active class to clicked tab
+    tab.classList.add('active');
+    
+    // Show corresponding content
+    const tabId = tab.getAttribute('data-tab');
+    document.getElementById(tabId).classList.add('active');
+  });
+});
+
+// Apply preset animation
+function applyAnimation(css, name, description) {
+  stopAnimation();
+  
+  // Apply animation
+  const styleSheet = document.createElement('style');
+  styleSheet.id = 'currentAnimationStyle';
+  styleSheet.textContent = `#animatedElement { ${css} }`;
+  
+  // Remove any existing animation styles
+  const existingStyle = document.getElementById('currentAnimationStyle');
+  if (existingStyle) {
+    existingStyle.remove();
+  }
+  
+  document.head.appendChild(styleSheet);
+  
+  // Update animation details
+  currentAnimation.textContent = `${name}\n\n${css}\n\n${description || ''}`;
+}
+
+// Handle preset buttons
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const preset = btn.getAttribute('data-preset');
+    const animation = animations[preset];
+    
+    if (animation) {
+      // Highlight active button
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      // Apply animation
+      applyAnimation(animation.css, animation.name, animation.description);
+      animationState.currentPreset = preset;
+    }
+  });
+});
+
+// Apply custom animation
+document.getElementById('applyCustom').addEventListener('click', () => {
+  const customCSS = customCSSInput.value;
+  if (customCSS) {
+    // Remove active class from preset buttons
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    
+    // Apply custom animation
+    applyAnimation(customCSS, 'Custom Animation');
+    animationState.currentPreset = 'custom';
+  }
+});
+
+// Performance monitoring with requestAnimationFrame
+function monitorPerformance(timestamp) {
+  if (!animationState.running) return;
+  
+  // Calculate frame time
+  if (animationState.lastTimestamp) {
+    const frameTime = timestamp - animationState.lastTimestamp;
+    animationState.frameTimes.push(frameTime);
+    
+    // Keep only the last 60 frames for average calculation
+    if (animationState.frameTimes.length > 60) {
+      animationState.frameTimes.shift();
+    }
+    
+    // Calculate average frame time and FPS
+    const avgFrameTime = animationState.frameTimes.reduce((sum, time) => sum + time, 0) / animationState.frameTimes.length;
+    const fps = Math.round(1000 / avgFrameTime);
+    
+    // Update min FPS
+    if (fps < animationState.minFPS && fps > 0) {
+      animationState.minFPS = fps;
+      minFPSDisplay.textContent = fps;
+    }
+    
+    // Update max frame time
+    if (frameTime > animationState.maxFrameTime) {
+      animationState.maxFrameTime = frameTime;
+      maxFrameTimeDisplay.textContent = frameTime.toFixed(1) + ' ms';
+    }
+    
+    // Check for janky frames (frames taking longer than FRAME_THRESHOLD)
+    if (frameTime > FRAME_THRESHOLD) {
+      animationState.jankyFrames++;
+      jankyFramesDisplay.textContent = animationState.jankyFrames;
+      
+      // Log janky frame
+      logPerformance(`Janky frame detected: ${frameTime.toFixed(1)}ms (${Math.round(1000 / frameTime)} FPS)`);
+    }
+    
+    // Update displays
+    fpsDisplay.textContent = fps;
+    frameTimeDisplay.textContent = avgFrameTime.toFixed(1) + ' ms';
+    
+    // Estimate CPU usage (very rough approximation)
+    const cpuEstimate = Math.min(100, Math.round((avgFrameTime / FRAME_THRESHOLD) * 40));
+    cpuUsageDisplay.textContent = cpuEstimate + '%';
+    
+    // Log periodically (every 60 frames)
+    animationState.frameCount++;
+    if (animationState.frameCount % 60 === 0) {
+      logPerformance(`Avg FPS: ${fps}, Frame time: ${avgFrameTime.toFixed(1)}ms, Janky frames: ${animationState.jankyFrames}`);
+    }
+  }
+  
+  animationState.lastTimestamp = timestamp;
+  requestAnimationFrame(monitorPerformance);
+}
+
+// Start animation monitoring
+function startAnimation() {
+  if (!animationState.running) {
+    // Check if there's an animation selected
+    if (!animationState.currentPreset && !customCSSInput.value) {
+      // Apply the transform preset by default
+      const transformButton = document.querySelector('[data-preset="transform"]');
+      transformButton.click();
+    }
+    
+    animationState.running = true;
+    animationState.lastTimestamp = 0;
+    
+    document.getElementById('startBtn').disabled = true;
+    document.getElementById('stopBtn').disabled = false;
+    
+    logPerformance(`Starting animation monitoring for: ${animationState.currentPreset || 'custom'}`);
+    requestAnimationFrame(monitorPerformance);
+  }
+}
+
+// Stop animation monitoring
+function stopAnimation() {
+  animationState.running = false;
+  document.getElementById('startBtn').disabled = false;
+  document.getElementById('stopBtn').disabled = true;
+  
+  if (animationState.frameCount > 0) {
+    logPerformance(`Animation stopped. Total frames: ${animationState.frameCount}, Janky frames: ${animationState.jankyFrames}`);
+  }
+}
+
+// Reset metrics
+function resetMetrics() {
+  animationState.frameCount = 0;
+  animationState.frameTimes = [];
+  animationState.jankyFrames = 0;
+  animationState.minFPS = Infinity;
+  animationState.maxFrameTime = 0;
+  
+  fpsDisplay.textContent = '0';
+  frameTimeDisplay.textContent = '0 ms';
+  cpuUsageDisplay.textContent = '0%';
+  minFPSDisplay.textContent = '-';
+  maxFrameTimeDisplay.textContent = '-';
+  jankyFramesDisplay.textContent = '0';
+  
+  performanceLog.innerHTML = '';
+  logPerformance('Metrics reset');
+}
+
+// Log performance information
+function logPerformance(message) {
+  const logEntry = document.createElement('div');
+  logEntry.className = 'log-entry';
+  logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+  performanceLog.appendChild(logEntry);
+  
+  // Auto-scroll to bottom
+  performanceLog.scrollTop = performanceLog.scrollHeight;
+}
+
+// Event listeners
+document.getElementById('startBtn').addEventListener('click', startAnimation);
+document.getElementById('stopBtn').addEventListener('click', stopAnimation);
+document.getElementById('resetMetrics').addEventListener('click', resetMetrics);
+
+// Initialize with transform animation selected
+document.querySelector('[data-preset="transform"]').click();
+</script>
+</body>
+</html>
