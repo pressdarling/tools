@@ -1,0 +1,1866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Pattern Generator</title>
+  <style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    height: 100vh;
+    background-color: #f5f5f5;
+  }
+
+  .app-container {
+    display: flex;
+    width: 100%;
+    height: 100%;
+  }
+
+  .canvas-container {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+  }
+
+  #canvas {
+    background-color: #FFFCF0; /* Flexoki Paper */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 100%;
+    max-height: 100%;
+  }
+
+  .controls-container {
+    width: 320px;
+    height: 100%;
+    padding: 20px;
+    background-color: #f0f0f0;
+    overflow-y: auto;
+    border-left: 1px solid #ddd;
+  }
+
+  .control-section {
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .control-section h2 {
+    margin-top: 0;
+    font-size: 18px;
+  }
+
+  .form-group {
+    margin-bottom: 12px;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
+
+  .form-group input[type="color"] {
+    width: 50px;
+    height: 30px;
+    border: 1px solid #ccc;
+    padding: 0;
+  }
+
+  .form-group input[type="range"] {
+    width: 100%;
+  }
+
+  .form-group input[type="number"],
+  .form-group input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+
+  .color-with-random {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .button-group {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  button {
+    padding: 8px 12px;
+    background-color: #403E3C; /* Flexoki 800 */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  button:hover {
+    background-color: #575653; /* Flexoki 700 */
+  }
+
+  button.primary {
+    background-color: #3171B2; /* Flexoki Blue 500 */
+  }
+
+  button.primary:hover {
+    background-color: #4385BE; /* Flexoki Blue 400 */
+  }
+
+  button.danger {
+    background-color: #AF3029; /* Flexoki Red 600 */
+  }
+
+  button.danger:hover {
+    background-color: #C03E35; /* Flexoki Red 500 */
+  }
+
+  .randomize-button {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  /* Layer list styles */
+  .layer-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .layer-item {
+    padding: 8px;
+    margin-bottom: 5px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .layer-item.selected {
+    border-color: #3171B2; /* Flexoki Blue 500 */
+    background-color: #E1ECEB; /* Flexoki Blue 50 */
+  }
+
+  .layer-item.hidden {
+    opacity: 0.5;
+  }
+
+  .layer-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .layer-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1px solid #ddd;
+  }
+
+  .layer-actions {
+    display: flex;
+    gap: 5px;
+  }
+
+  .layer-toggle {
+    cursor: pointer;
+    opacity: 0.7;
+  }
+
+  .layer-toggle:hover {
+    opacity: 1;
+  }
+
+  .parameter-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .parameter-row label {
+    flex: 1;
+  }
+
+  .parameter-row .control-wrapper {
+    flex: 2;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .parameter-row input[type="range"],
+  .parameter-row input[type="number"],
+  .parameter-row input[type="color"] {
+    flex: 1;
+  }
+
+  .parameter-row input[type="checkbox"] {
+    margin-left: 8px;
+  }
+
+  /* Display values next to sliders */
+  .range-with-value {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .range-with-value input[type="range"] {
+    flex: 1;
+  }
+
+  .range-value {
+    width: 50px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Message overlay */
+  .message-overlay {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 4px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  .message-overlay.visible {
+    opacity: 1;
+  }
+  
+  .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+  }
+  
+  .modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 90%;
+    max-height: 90%;
+    overflow: auto;
+    position: relative;
+  }
+  
+  .modal-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 20px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: #333;
+  }
+
+  /* Custom range slider styling */
+  input[type="range"] {
+    -webkit-appearance: none;
+    height: 8px;
+    background: #ddd;
+    border-radius: 4px;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    background: #3171B2;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: #3171B2;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+  }
+
+  /* Additional utility classes */
+  .hidden {
+    display: none !important;
+  }
+  
+  /* Modal helpers */
+  .modal-helper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.7);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+  
+  .modal-helper-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 4px;
+    max-width: 90%;
+    max-height: 90%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .modal-helper textarea {
+    width: 100%;
+    min-height: 200px;
+    padding: 10px;
+    font-size: 16px;
+    font-family: monospace;
+    border: 1px solid #ccc;
+  }
+  
+  .modal-helper-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+  
+  /* Flexoki colors */
+  :root {
+    --flexoki-black: #100F0F;
+    --flexoki-paper: #FFFCF0;
+    
+    --flexoki-50: #F2F0E5;
+    --flexoki-100: #E6E4D9;
+    --flexoki-150: #DAD8CE;
+    --flexoki-200: #CECDC3;
+    --flexoki-300: #B7B5AC;
+    --flexoki-400: #9F9D96;
+    --flexoki-500: #878580;
+    --flexoki-600: #6F6E69;
+    --flexoki-700: #575653;
+    --flexoki-800: #403E3C;
+    --flexoki-850: #343331;
+    --flexoki-900: #282726;
+    --flexoki-950: #1C1B1A;
+    
+    --flexoki-red-50: #FFE1D5;
+    --flexoki-red-100: #FFCABB;
+    --flexoki-red-150: #FDB2A2;
+    --flexoki-red-200: #F89A8A;
+    --flexoki-red-300: #E8705F;
+    --flexoki-red-400: #D14D41;
+    --flexoki-red-500: #C03E35;
+    --flexoki-red-600: #AF3029;
+    --flexoki-red-700: #942822;
+    --flexoki-red-800: #6C201C;
+    --flexoki-red-850: #551B18;
+    --flexoki-red-900: #3E1715;
+    --flexoki-red-950: #261312;
+    
+    --flexoki-orange-50: #FFE7CE;
+    --flexoki-orange-100: #FED3AF;
+    --flexoki-orange-150: #FCC192;
+    --flexoki-orange-200: #F9AE77;
+    --flexoki-orange-300: #EC8B49;
+    --flexoki-orange-400: #DA702C;
+    --flexoki-orange-500: #CB6120;
+    --flexoki-orange-600: #BC5215;
+    --flexoki-orange-700: #9D4310;
+    --flexoki-orange-800: #71320D;
+    --flexoki-orange-850: #59290D;
+    --flexoki-orange-900: #40200D;
+    --flexoki-orange-950: #27180E;
+    
+    --flexoki-yellow-50: #FAEEC6;
+    --flexoki-yellow-100: #F6E2A0;
+    --flexoki-yellow-150: #F1D67E;
+    --flexoki-yellow-200: #ECCB60;
+    --flexoki-yellow-300: #DFB431;
+    --flexoki-yellow-400: #D0A215;
+    --flexoki-yellow-500: #BE9207;
+    --flexoki-yellow-600: #AD8301;
+    --flexoki-yellow-700: #8E6B01;
+    --flexoki-yellow-800: #664D01;
+    --flexoki-yellow-850: #503D02;
+    --flexoki-yellow-900: #3A2D04;
+    --flexoki-yellow-950: #241E08;
+    
+    --flexoki-green-50: #EDEECF;
+    --flexoki-green-100: #DDE2B2;
+    --flexoki-green-150: #CDD597;
+    --flexoki-green-200: #BEC97E;
+    --flexoki-green-300: #A0AF54;
+    --flexoki-green-400: #879A39;
+    --flexoki-green-500: #768D21;
+    --flexoki-green-600: #66800B;
+    --flexoki-green-700: #536907;
+    --flexoki-green-800: #3D4C07;
+    --flexoki-green-850: #313D07;
+    --flexoki-green-900: #252D09;
+    --flexoki-green-950: #1A1E0C;
+    
+    --flexoki-cyan-50: #DDF1E4;
+    --flexoki-cyan-100: #BFE8D9;
+    --flexoki-cyan-150: #A2DECE;
+    --flexoki-cyan-200: #87D3C3;
+    --flexoki-cyan-300: #5ABDAC;
+    --flexoki-cyan-400: #3AA99F;
+    --flexoki-cyan-500: #2F968D;
+    --flexoki-cyan-600: #24837B;
+    --flexoki-cyan-700: #1C6C66;
+    --flexoki-cyan-800: #164F4A;
+    --flexoki-cyan-850: #143F3C;
+    --flexoki-cyan-900: #122F2C;
+    --flexoki-cyan-950: #101F1D;
+    
+    --flexoki-blue-50: #E1ECEB;
+    --flexoki-blue-100: #C6DDE8;
+    --flexoki-blue-150: #ABCFE2;
+    --flexoki-blue-200: #92BFDB;
+    --flexoki-blue-300: #66A0C8;
+    --flexoki-blue-400: #4385BE;
+    --flexoki-blue-500: #3171B2;
+    --flexoki-blue-600: #205EA6;
+    --flexoki-blue-700: #1A4F8C;
+    --flexoki-blue-800: #163B66;
+    --flexoki-blue-850: #133051;
+    --flexoki-blue-900: #12253B;
+    --flexoki-blue-950: #101A24;
+    
+    --flexoki-purple-50: #F0EAEC;
+    --flexoki-purple-100: #E2D9E9;
+    --flexoki-purple-150: #D3CAE6;
+    --flexoki-purple-200: #C4B9E0;
+    --flexoki-purple-300: #A699D0;
+    --flexoki-purple-400: #8B7EC8;
+    --flexoki-purple-500: #735EB5;
+    --flexoki-purple-600: #5E409D;
+    --flexoki-purple-700: #4F3685;
+    --flexoki-purple-800: #3C2A62;
+    --flexoki-purple-850: #31234E;
+    --flexoki-purple-900: #261C39;
+    --flexoki-purple-950: #1A1623;
+    
+    --flexoki-magenta-50: #FEE4E5;
+    --flexoki-magenta-100: #FCCFDA;
+    --flexoki-magenta-150: #F9B9CF;
+    --flexoki-magenta-200: #F4A4C2;
+    --flexoki-magenta-300: #E47DA8;
+    --flexoki-magenta-400: #CE5D97;
+    --flexoki-magenta-500: #B74583;
+    --flexoki-magenta-600: #A02F6F;
+    --flexoki-magenta-700: #87285E;
+    --flexoki-magenta-800: #641F46;
+    --flexoki-magenta-850: #4F1B39;
+    --flexoki-magenta-900: #39172B;
+    --flexoki-magenta-950: #24131D;
+  }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <div class="canvas-container">
+      <canvas id="canvas" width="800" height="800"></canvas>
+      <div id="messageOverlay" class="message-overlay"></div>
+    </div>
+    <div class="controls-container">
+      <!-- Global Controls -->
+      <div class="control-section" id="globalControls">
+        <h2>Global Controls</h2>
+        <div class="form-group">
+          <label for="bgColor">Background Color:</label>
+          <div class="color-with-random">
+            <input type="color" id="bgColor" value="#FFFCF0">
+            <button id="randomizeBg" title="Randomize Background">🎨</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="seedInput">Randomization Seed:</label>
+          <div class="color-with-random">
+            <input type="text" id="seedInput" placeholder="Seed value">
+            <button id="newSeed" title="Generate New Seed">🎲</button>
+          </div>
+        </div>
+        <div class="button-group">
+          <button id="saveProject" class="primary">Save Project</button>
+          <button id="loadProject">Load Project</button>
+          <button id="exportImage">Export Image</button>
+        </div>
+      </div>
+
+      <!-- Layer Management -->
+      <div class="control-section" id="layerManagement">
+        <h2>Layers</h2>
+        <div class="button-group">
+          <button id="addLayer" class="primary">Add Layer</button>
+          <button id="deleteLayer" disabled>Delete Layer</button>
+        </div>
+        <div class="button-group">
+          <button id="moveLayerUp" disabled>Move Up</button>
+          <button id="moveLayerDown" disabled>Move Down</button>
+        </div>
+        <ul class="layer-list" id="layerList">
+          <!-- Layers will be added here dynamically -->
+        </ul>
+      </div>
+
+      <!-- Layer Settings -->
+      <div class="control-section" id="layerSettings">
+        <h2>Layer Settings</h2>
+        <div id="layerSettingsContent">
+          <p>Select a layer to edit its settings.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- File input for loading (hidden) -->
+  <input type="file" id="fileInput" accept=".json" style="display: none;">
+
+  <script type="module">
+// Constants
+const FLEXOKI_COLORS = {
+  black: '#100F0F',
+  paper: '#FFFCF0',
+  50: '#F2F0E5',
+  100: '#E6E4D9',
+  150: '#DAD8CE',
+  200: '#CECDC3',
+  300: '#B7B5AC',
+  400: '#9F9D96',
+  500: '#878580',
+  600: '#6F6E69',
+  700: '#575653',
+  800: '#403E3C',
+  850: '#343331',
+  900: '#282726',
+  950: '#1C1B1A',
+  red: {
+    500: '#C03E35',
+    600: '#AF3029'
+  },
+  orange: {
+    500: '#CB6120',
+    600: '#BC5215'
+  },
+  yellow: {
+    500: '#BE9207',
+    600: '#AD8301'
+  },
+  green: {
+    500: '#768D21',
+    600: '#66800B'
+  },
+  cyan: {
+    500: '#2F968D',
+    600: '#24837B'
+  },
+  blue: {
+    500: '#3171B2',
+    600: '#205EA6'
+  },
+  purple: {
+    500: '#735EB5',
+    600: '#5E409D'
+  },
+  magenta: {
+    500: '#B74583',
+    600: '#A02F6F'
+  }
+};
+
+const PATTERN_TYPES = {
+  SPIRAL: 'Spiral',
+  RADIAL_BURST: 'Radial Burst',
+  FRACTAL_TREE: 'Fractal Tree',
+  GRID: 'Grid'
+};
+
+// Pattern-specific parameter definitions
+const PATTERN_PARAMS = {
+  [PATTERN_TYPES.SPIRAL]: [
+    { id: 'lineWidth', label: 'Line Width', type: 'range', min: 0.1, max: 20, step: 0.1, default: 2 },
+    { id: 'angleStep', label: 'Angle Step', type: 'range', min: 0.01, max: 1, step: 0.01, default: 0.1 },
+    { id: 'growthFactor', label: 'Growth Factor', type: 'range', min: 0.1, max: 10, step: 0.1, default: 1 },
+    { id: 'turns', label: 'Turns', type: 'range', min: 1, max: 50, step: 1, default: 10 },
+    { id: 'centerX', label: 'Center X', type: 'range', min: 0, max: 1, step: 0.01, default: 0.5 },
+    { id: 'centerY', label: 'Center Y', type: 'range', min: 0, max: 1, step: 0.01, default: 0.5 }
+  ],
+  [PATTERN_TYPES.RADIAL_BURST]: [
+    { id: 'lineWidth', label: 'Line Width', type: 'range', min: 0.1, max: 20, step: 0.1, default: 2 },
+    { id: 'lineCount', label: 'Line Count', type: 'range', min: 3, max: 180, step: 1, default: 24 },
+    { id: 'length', label: 'Length', type: 'range', min: 0.05, max: 1, step: 0.01, default: 0.4 },
+    { id: 'centerX', label: 'Center X', type: 'range', min: 0, max: 1, step: 0.01, default: 0.5 },
+    { id: 'centerY', label: 'Center Y', type: 'range', min: 0, max: 1, step: 0.01, default: 0.5 }
+  ],
+  [PATTERN_TYPES.FRACTAL_TREE]: [
+    { id: 'lineWidth', label: 'Line Width', type: 'range', min: 0.1, max: 20, step: 0.1, default: 2 },
+    { id: 'depth', label: 'Depth', type: 'range', min: 1, max: 12, step: 1, default: 6 },
+    { id: 'angle', label: 'Angle (°)', type: 'range', min: 5, max: 90, step: 1, default: 30 },
+    { id: 'lengthFactor', label: 'Length Factor', type: 'range', min: 0.3, max: 0.9, step: 0.01, default: 0.7 },
+    { id: 'startX', label: 'Start X', type: 'range', min: 0, max: 1, step: 0.01, default: 0.5 },
+    { id: 'startY', label: 'Start Y', type: 'range', min: 0, max: 1, step: 0.01, default: 1 }
+  ],
+  [PATTERN_TYPES.GRID]: [
+    { id: 'lineWidth', label: 'Line Width', type: 'range', min: 0.1, max: 20, step: 0.1, default: 1 },
+    { id: 'rows', label: 'Rows', type: 'range', min: 1, max: 100, step: 1, default: 10 },
+    { id: 'columns', label: 'Columns', type: 'range', min: 1, max: 100, step: 1, default: 10 }
+  ]
+};
+
+// Common layer parameters
+const COMMON_PARAMS = [
+  { id: 'color', label: 'Color', type: 'color', default: '#C03E35' },
+  { id: 'opacity', label: 'Opacity', type: 'range', min: 0, max: 1, step: 0.01, default: 1 },
+  { id: 'blendMode', label: 'Blend Mode', type: 'select', options: [
+    { value: 'source-over', label: 'Normal' },
+    { value: 'multiply', label: 'Multiply' },
+    { value: 'screen', label: 'Screen' },
+    { value: 'overlay', label: 'Overlay' },
+    { value: 'darken', label: 'Darken' },
+    { value: 'lighten', label: 'Lighten' },
+    { value: 'color-dodge', label: 'Color Dodge' },
+    { value: 'color-burn', label: 'Color Burn' },
+    { value: 'hard-light', label: 'Hard Light' },
+    { value: 'soft-light', label: 'Soft Light' },
+    { value: 'difference', label: 'Difference' },
+    { value: 'exclusion', label: 'Exclusion' },
+  ], default: 'source-over' }
+];
+
+// Seeded random number generator
+class PRNG {
+  constructor(seed) {
+    this.seed = this.hash(seed || Math.random().toString());
+  }
+
+  // Simple hash function for string seeds
+  hash(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return hash;
+  }
+
+  // Get next random value
+  next() {
+    const x = Math.sin(this.seed++) * 10000;
+    return x - Math.floor(x);
+  }
+
+  // Get random integer between min and max (inclusive)
+  nextInt(min, max) {
+    return Math.floor(this.next() * (max - min + 1) + min);
+  }
+
+  // Get random float between min and max
+  nextFloat(min, max) {
+    return this.next() * (max - min) + min;
+  }
+
+  // Get random boolean
+  nextBool() {
+    return this.next() >= 0.5;
+  }
+
+  // Get random item from array
+  nextItem(array) {
+    return array[this.nextInt(0, array.length - 1)];
+  }
+
+  // Get random color from Flexoki palette
+  nextFlexokiColor() {
+    const colorTypes = ['red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'purple', 'magenta'];
+    const selectedType = this.nextItem(colorTypes);
+    return FLEXOKI_COLORS[selectedType][500];
+  }
+}
+
+// Application state
+const AppState = {
+  backgroundColor: FLEXOKI_COLORS.paper,
+  seed: Date.now().toString(),
+  layers: [],
+  selectedLayerId: null,
+  prng: null,
+  nextLayerId: 0,
+
+  // Initialize the state
+  init() {
+    this.prng = new PRNG(this.seed);
+    return this;
+  },
+
+  // Generate a new seed
+  generateNewSeed() {
+    this.seed = Date.now().toString();
+    this.prng = new PRNG(this.seed);
+    return this.seed;
+  },
+
+  // Set the seed
+  setSeed(seed) {
+    this.seed = seed;
+    this.prng = new PRNG(seed);
+    return this.seed;
+  },
+
+  // Add a new layer
+  addLayer(layer = null) {
+    if (!layer) {
+      const patternTypes = Object.values(PATTERN_TYPES);
+      const randomType = this.prng.nextItem(patternTypes);
+      
+      layer = {
+        id: this.nextLayerId++,
+        name: `Layer ${this.layers.length + 1}`,
+        type: randomType,
+        visible: true,
+        params: this.getDefaultParams(randomType),
+        randomizeFlags: this.getDefaultRandomizeFlags(randomType)
+      };
+    } else if (layer.id === undefined) {
+      layer.id = this.nextLayerId++;
+    }
+    
+    this.layers.unshift(layer); // Add to top
+    this.selectedLayerId = layer.id;
+    return layer;
+  },
+
+  // Get default parameters for a pattern type
+  getDefaultParams(type) {
+    const params = {};
+    
+    // Common params
+    COMMON_PARAMS.forEach(param => {
+      params[param.id] = param.id === 'color' ? this.prng.nextFlexokiColor() : param.default;
+    });
+    
+    // Pattern-specific params
+    PATTERN_PARAMS[type].forEach(param => {
+      params[param.id] = param.default;
+    });
+    
+    return params;
+  },
+
+  // Get default randomize flags for a pattern type
+  getDefaultRandomizeFlags(type) {
+    const flags = {};
+    
+    // Common params
+    COMMON_PARAMS.forEach(param => {
+      flags[param.id] = true;
+    });
+    
+    // Pattern-specific params
+    PATTERN_PARAMS[type].forEach(param => {
+      flags[param.id] = true;
+    });
+    
+    return flags;
+  },
+
+  // Delete a layer
+  deleteLayer(id) {
+    const index = this.layers.findIndex(layer => layer.id === id);
+    if (index !== -1) {
+      this.layers.splice(index, 1);
+      
+      if (this.selectedLayerId === id) {
+        this.selectedLayerId = this.layers.length > 0 ? this.layers[0].id : null;
+      }
+    }
+  },
+
+  // Move a layer up in the stack (visually down)
+  moveLayerUp(id) {
+    const index = this.layers.findIndex(layer => layer.id === id);
+    if (index > 0) {
+      const temp = this.layers[index];
+      this.layers[index] = this.layers[index - 1];
+      this.layers[index - 1] = temp;
+    }
+  },
+
+  // Move a layer down in the stack (visually up)
+  moveLayerDown(id) {
+    const index = this.layers.findIndex(layer => layer.id === id);
+    if (index < this.layers.length - 1) {
+      const temp = this.layers[index];
+      this.layers[index] = this.layers[index + 1];
+      this.layers[index + 1] = temp;
+    }
+  },
+
+  // Toggle layer visibility
+  toggleLayerVisibility(id) {
+    const layer = this.layers.find(layer => layer.id === id);
+    if (layer) {
+      layer.visible = !layer.visible;
+    }
+  },
+
+  // Get the selected layer
+  getSelectedLayer() {
+    return this.layers.find(layer => layer.id === this.selectedLayerId);
+  },
+
+  // Update layer parameter
+  updateLayerParam(id, paramId, value) {
+    const layer = this.layers.find(layer => layer.id === id);
+    if (layer && layer.params[paramId] !== undefined) {
+      layer.params[paramId] = value;
+    }
+  },
+
+  // Update layer type
+  updateLayerType(id, newType) {
+    const layer = this.layers.find(layer => layer.id === id);
+    if (layer) {
+      // Save common params
+      const commonParams = {};
+      COMMON_PARAMS.forEach(param => {
+        commonParams[param.id] = layer.params[param.id];
+      });
+      
+      // Create new params object with default pattern-specific params
+      layer.params = this.getDefaultParams(newType);
+      
+      // Restore common params
+      COMMON_PARAMS.forEach(param => {
+        layer.params[param.id] = commonParams[param.id];
+      });
+      
+      // Update randomize flags
+      layer.randomizeFlags = this.getDefaultRandomizeFlags(newType);
+      
+      // Update type
+      layer.type = newType;
+    }
+  },
+
+  // Update randomize flag
+  updateRandomizeFlag(id, paramId, value) {
+    const layer = this.layers.find(layer => layer.id === id);
+    if (layer && layer.randomizeFlags[paramId] !== undefined) {
+      layer.randomizeFlags[paramId] = value;
+    }
+  },
+
+  // Randomize layer parameters
+  randomizeLayer(id) {
+    const layer = this.layers.find(layer => layer.id === id);
+    if (!layer) return;
+    
+    // Randomize common parameters
+    COMMON_PARAMS.forEach(param => {
+      if (layer.randomizeFlags[param.id]) {
+        if (param.id === 'color') {
+          layer.params[param.id] = this.prng.nextFlexokiColor();
+        } else if (param.type === 'range') {
+          layer.params[param.id] = this.prng.nextFloat(param.min, param.max);
+        } else if (param.type === 'select') {
+          layer.params[param.id] = this.prng.nextItem(param.options).value;
+        }
+      }
+    });
+    
+    // Randomize pattern-specific parameters
+    const patternParams = PATTERN_PARAMS[layer.type];
+    patternParams.forEach(param => {
+      if (layer.randomizeFlags[param.id]) {
+        if (param.type === 'range') {
+          layer.params[param.id] = this.prng.nextFloat(param.min, param.max);
+        }
+      }
+    });
+  },
+
+  // Randomize background color
+  randomizeBackground() {
+    this.backgroundColor = this.prng.nextFlexokiColor();
+    return this.backgroundColor;
+  },
+
+  // Export state to JSON
+  exportState() {
+    return {
+      version: '1.1',
+      backgroundColor: this.backgroundColor,
+      seed: this.seed,
+      layers: this.layers
+    };
+  },
+
+  // Import state from JSON
+  importState(data) {
+    try {
+      if (data.version !== '1.1') {
+        console.warn('Loading project with different version: ' + data.version);
+      }
+      
+      this.backgroundColor = data.backgroundColor || FLEXOKI_COLORS.paper;
+      this.setSeed(data.seed || Date.now().toString());
+      
+      this.layers = [];
+      this.nextLayerId = 0;
+      
+      if (Array.isArray(data.layers)) {
+        data.layers.forEach(layer => {
+          this.addLayer(layer);
+          if (layer.id >= this.nextLayerId) {
+            this.nextLayerId = layer.id + 1;
+          }
+        });
+      }
+      
+      this.selectedLayerId = this.layers.length > 0 ? this.layers[0].id : null;
+      
+      return true;
+    } catch (error) {
+      console.error('Error importing state:', error);
+      return false;
+    }
+  }
+};
+
+// Canvas renderer
+const Renderer = {
+  canvas: null,
+  ctx: null,
+  appState: null,
+  
+  init(canvasElement, appState) {
+    this.canvas = canvasElement;
+    this.ctx = this.canvas.getContext('2d');
+    this.appState = appState;
+    this.resizeCanvas();
+    return this;
+  },
+  
+  resizeCanvas() {
+    const containerWidth = this.canvas.parentElement.clientWidth;
+    const containerHeight = this.canvas.parentElement.clientHeight;
+    
+    // Calculate size maintaining aspect ratio
+    const size = Math.min(containerWidth, containerHeight) - 40;
+    
+    this.canvas.width = size;
+    this.canvas.height = size;
+  },
+  
+  render() {
+    const ctx = this.ctx;
+    const width = this.canvas.width;
+    const height = this.canvas.height;
+    
+    // Clear canvas with background color
+    ctx.fillStyle = this.appState.backgroundColor;
+    ctx.fillRect(0, 0, width, height);
+    
+    // Render layers from bottom to top
+    for (let i = this.appState.layers.length - 1; i >= 0; i--) {
+      const layer = this.appState.layers[i];
+      if (layer.visible) {
+        this.renderLayer(layer);
+      }
+    }
+  },
+  
+  renderLayer(layer) {
+    const ctx = this.ctx;
+    const width = this.canvas.width;
+    const height = this.canvas.height;
+    
+    // Save context state
+    ctx.save();
+    
+    // Apply blend mode and opacity
+    ctx.globalCompositeOperation = layer.params.blendMode;
+    ctx.globalAlpha = layer.params.opacity;
+    
+    // Render pattern based on type
+    switch (layer.type) {
+      case PATTERN_TYPES.SPIRAL:
+        this.renderSpiral(layer.params);
+        break;
+      case PATTERN_TYPES.RADIAL_BURST:
+        this.renderRadialBurst(layer.params);
+        break;
+      case PATTERN_TYPES.FRACTAL_TREE:
+        this.renderFractalTree(layer.params);
+        break;
+      case PATTERN_TYPES.GRID:
+        this.renderGrid(layer.params);
+        break;
+    }
+    
+    // Restore context state
+    ctx.restore();
+  },
+  
+  renderSpiral(params) {
+    const ctx = this.ctx;
+    const width = this.canvas.width;
+    const height = this.canvas.height;
+    
+    const centerX = params.centerX * width;
+    const centerY = params.centerY * height;
+    const radius = Math.min(width, height) / 2;
+    const turns = params.turns;
+    const angleStep = params.angleStep;
+    const growthFactor = params.growthFactor;
+    
+    ctx.strokeStyle = params.color;
+    ctx.lineWidth = params.lineWidth;
+    ctx.lineCap = 'round';
+    
+    ctx.beginPath();
+    
+    for (let angle = 0; angle < turns * 2 * Math.PI; angle += angleStep) {
+      const distance = (growthFactor * angle / (2 * Math.PI)) * radius;
+      const x = centerX + Math.cos(angle) * distance;
+      const y = centerY + Math.sin(angle) * distance;
+      
+      if (angle === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    }
+    
+    ctx.stroke();
+  },
+  
+  renderRadialBurst(params) {
+    const ctx = this.ctx;
+    const width = this.canvas.width;
+    const height = this.canvas.height;
+    
+    const centerX = params.centerX * width;
+    const centerY = params.centerY * height;
+    const maxRadius = Math.min(width, height) / 2 * params.length;
+    const lineCount = params.lineCount;
+    
+    ctx.strokeStyle = params.color;
+    ctx.lineWidth = params.lineWidth;
+    ctx.lineCap = 'round';
+    
+    for (let i = 0; i < lineCount; i++) {
+      const angle = (i / lineCount) * 2 * Math.PI;
+      const endX = centerX + Math.cos(angle) * maxRadius;
+      const endY = centerY + Math.sin(angle) * maxRadius;
+      
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
+    }
+  },
+  
+  renderFractalTree(params) {
+    const ctx = this.ctx;
+    const width = this.canvas.width;
+    const height = this.canvas.height;
+    
+    const startX = params.startX * width;
+    const startY = params.startY * height;
+    const initialLength = Math.min(width, height) * 0.3;
+    const angle = params.angle * Math.PI / 180;
+    const depth = params.depth;
+    
+    ctx.strokeStyle = params.color;
+    ctx.lineCap = 'round';
+    
+    const drawBranch = (x, y, length, angle, depth, width) => {
+      if (depth <= 0) return;
+      
+      const endX = x - Math.sin(angle) * length;
+      const endY = y - Math.cos(angle) * length;
+      
+      ctx.lineWidth = width;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
+      
+      const newLength = length * params.lengthFactor;
+      const newWidth = width * 0.7;
+      
+      drawBranch(endX, endY, newLength, angle - params.angle * Math.PI / 180, depth - 1, newWidth);
+      drawBranch(endX, endY, newLength, angle + params.angle * Math.PI / 180, depth - 1, newWidth);
+    };
+    
+    drawBranch(startX, startY, initialLength, -Math.PI / 2, depth, params.lineWidth);
+  },
+  
+  renderGrid(params) {
+    const ctx = this.ctx;
+    const width = this.canvas.width;
+    const height = this.canvas.height;
+    
+    const rows = params.rows;
+    const columns = params.columns;
+    
+    ctx.strokeStyle = params.color;
+    ctx.lineWidth = params.lineWidth;
+    
+    // Draw vertical lines
+    for (let i = 0; i <= columns; i++) {
+      const x = (i / columns) * width;
+      
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, height);
+      ctx.stroke();
+    }
+    
+    // Draw horizontal lines
+    for (let i = 0; i <= rows; i++) {
+      const y = (i / rows) * height;
+      
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
+      ctx.stroke();
+    }
+  }
+};
+
+// UI Controller
+const UI = {
+  appState: null,
+  renderer: null,
+  
+  init(appState, renderer) {
+    this.appState = appState;
+    this.renderer = renderer;
+    
+    // Initialize event listeners
+    this.initEventListeners();
+    
+    // Initialize UI with current state
+    this.updateUI();
+    
+    return this;
+  },
+  
+  initEventListeners() {
+    // Global controls
+    document.getElementById('bgColor').addEventListener('input', this.handleBackgroundColorChange.bind(this));
+    document.getElementById('randomizeBg').addEventListener('click', this.handleRandomizeBackground.bind(this));
+    document.getElementById('seedInput').addEventListener('input', this.handleSeedChange.bind(this));
+    document.getElementById('newSeed').addEventListener('click', this.handleNewSeed.bind(this));
+    document.getElementById('saveProject').addEventListener('click', this.handleSaveProject.bind(this));
+    document.getElementById('loadProject').addEventListener('click', this.handleLoadProject.bind(this));
+    document.getElementById('exportImage').addEventListener('click', this.handleExportImage.bind(this));
+    
+    // Layer management
+    document.getElementById('addLayer').addEventListener('click', this.handleAddLayer.bind(this));
+    document.getElementById('deleteLayer').addEventListener('click', this.handleDeleteLayer.bind(this));
+    document.getElementById('moveLayerUp').addEventListener('click', this.handleMoveLayerUp.bind(this));
+    document.getElementById('moveLayerDown').addEventListener('click', this.handleMoveLayerDown.bind(this));
+    
+    // File input change
+    document.getElementById('fileInput').addEventListener('change', this.handleFileInputChange.bind(this));
+    
+    // Handle window resize
+    window.addEventListener('resize', this.handleWindowResize.bind(this));
+  },
+  
+  updateUI() {
+    // Update global controls
+    document.getElementById('bgColor').value = this.appState.backgroundColor;
+    document.getElementById('seedInput').value = this.appState.seed;
+    
+    // Update layer list
+    this.updateLayerList();
+    
+    // Update layer settings
+    this.updateLayerSettings();
+    
+    // Render canvas
+    this.renderer.render();
+  },
+  
+  updateLayerList() {
+    const layerList = document.getElementById('layerList');
+    layerList.innerHTML = '';
+    
+    this.appState.layers.forEach(layer => {
+      const li = document.createElement('li');
+      li.className = `layer-item ${layer.id === this.appState.selectedLayerId ? 'selected' : ''} ${!layer.visible ? 'hidden' : ''}`;
+      li.dataset.id = layer.id;
+      
+      const layerInfo = document.createElement('div');
+      layerInfo.className = 'layer-info';
+      
+      const colorSwatch = document.createElement('div');
+      colorSwatch.className = 'layer-color';
+      colorSwatch.style.backgroundColor = layer.params.color;
+      
+      const layerName = document.createElement('span');
+      layerName.textContent = layer.name;
+      
+      const layerType = document.createElement('span');
+      layerType.textContent = layer.type;
+      layerType.style.fontSize = '0.8em';
+      layerType.style.color = '#666';
+      layerType.style.marginLeft = '5px';
+      
+      layerInfo.appendChild(colorSwatch);
+      layerInfo.appendChild(layerName);
+      layerInfo.appendChild(layerType);
+      
+      const layerActions = document.createElement('div');
+      layerActions.className = 'layer-actions';
+      
+      const visibilityToggle = document.createElement('span');
+      visibilityToggle.className = 'layer-toggle';
+      visibilityToggle.textContent = layer.visible ? '👁️' : '👁️‍🗨️';
+      visibilityToggle.title = layer.visible ? 'Hide Layer' : 'Show Layer';
+      
+      layerActions.appendChild(visibilityToggle);
+      
+      li.appendChild(layerInfo);
+      li.appendChild(layerActions);
+      
+      // Add event listeners
+      li.addEventListener('click', (e) => {
+        if (e.target !== visibilityToggle) {
+          this.handleLayerSelect(layer.id);
+        }
+      });
+      
+      visibilityToggle.addEventListener('click', () => {
+        this.handleLayerVisibilityToggle(layer.id);
+      });
+      
+      layerList.appendChild(li);
+    });
+    
+    // Update button states
+    const hasSelection = this.appState.selectedLayerId !== null;
+    const hasMultipleLayers = this.appState.layers.length > 1;
+    const selectedIndex = this.appState.layers.findIndex(layer => layer.id === this.appState.selectedLayerId);
+    
+    document.getElementById('deleteLayer').disabled = !hasSelection;
+    document.getElementById('moveLayerUp').disabled = !hasSelection || selectedIndex === 0;
+    document.getElementById('moveLayerDown').disabled = !hasSelection || selectedIndex === this.appState.layers.length - 1;
+  },
+  
+  updateLayerSettings() {
+    const layerSettingsContent = document.getElementById('layerSettingsContent');
+    layerSettingsContent.innerHTML = '';
+    
+    const selectedLayer = this.appState.getSelectedLayer();
+    if (!selectedLayer) {
+      layerSettingsContent.innerHTML = '<p>Select a layer to edit its settings.</p>';
+      return;
+    }
+    
+    // Layer name and randomize button
+    const header = document.createElement('div');
+    header.style.display = 'flex';
+    header.style.justifyContent = 'space-between';
+    header.style.marginBottom = '15px';
+    
+    const nameLabel = document.createElement('label');
+    nameLabel.textContent = selectedLayer.name;
+    nameLabel.style.fontWeight = 'bold';
+    
+    const randomizeButton = document.createElement('button');
+    randomizeButton.className = 'randomize-button';
+    randomizeButton.innerHTML = '🎲 Randomize';
+    randomizeButton.addEventListener('click', () => this.handleRandomizeLayer(selectedLayer.id));
+    
+    header.appendChild(nameLabel);
+    header.appendChild(randomizeButton);
+    layerSettingsContent.appendChild(header);
+    
+    // Pattern type selector
+    const patternTypeGroup = document.createElement('div');
+    patternTypeGroup.className = 'form-group';
+    
+    const patternTypeLabel = document.createElement('label');
+    patternTypeLabel.textContent = 'Pattern Type:';
+    patternTypeLabel.htmlFor = 'patternType';
+    
+    const patternTypeSelect = document.createElement('select');
+    patternTypeSelect.id = 'patternType';
+    
+    Object.values(PATTERN_TYPES).forEach(type => {
+      const option = document.createElement('option');
+      option.value = type;
+      option.textContent = type;
+      option.selected = type === selectedLayer.type;
+      patternTypeSelect.appendChild(option);
+    });
+    
+    patternTypeSelect.addEventListener('change', (e) => {
+      this.handlePatternTypeChange(selectedLayer.id, e.target.value);
+    });
+    
+    patternTypeGroup.appendChild(patternTypeLabel);
+    patternTypeGroup.appendChild(patternTypeSelect);
+    layerSettingsContent.appendChild(patternTypeGroup);
+    
+    // Common controls section
+    const commonSection = document.createElement('div');
+    commonSection.className = 'control-section';
+    commonSection.style.marginTop = '15px';
+    
+    const commonHeading = document.createElement('h3');
+    commonHeading.textContent = 'Common Settings';
+    commonHeading.style.fontSize = '16px';
+    commonHeading.style.marginTop = '0';
+    
+    commonSection.appendChild(commonHeading);
+    
+    COMMON_PARAMS.forEach(param => {
+      const paramRow = this.createParameterControl(
+        param,
+        selectedLayer.params[param.id],
+        selectedLayer.randomizeFlags[param.id],
+        (value) => this.handleParameterChange(selectedLayer.id, param.id, value),
+        (checked) => this.handleRandomizeFlagChange(selectedLayer.id, param.id, checked)
+      );
+      commonSection.appendChild(paramRow);
+    });
+    
+    layerSettingsContent.appendChild(commonSection);
+    
+    // Pattern-specific controls section
+    const specificSection = document.createElement('div');
+    specificSection.className = 'control-section';
+    specificSection.style.marginTop = '15px';
+    
+    const specificHeading = document.createElement('h3');
+    specificHeading.textContent = `${selectedLayer.type} Parameters`;
+    specificHeading.style.fontSize = '16px';
+    specificHeading.style.marginTop = '0';
+    
+    specificSection.appendChild(specificHeading);
+    
+    const patternParams = PATTERN_PARAMS[selectedLayer.type];
+    patternParams.forEach(param => {
+      const paramRow = this.createParameterControl(
+        param,
+        selectedLayer.params[param.id],
+        selectedLayer.randomizeFlags[param.id],
+        (value) => this.handleParameterChange(selectedLayer.id, param.id, value),
+        (checked) => this.handleRandomizeFlagChange(selectedLayer.id, param.id, checked)
+      );
+      specificSection.appendChild(paramRow);
+    });
+    
+    layerSettingsContent.appendChild(specificSection);
+  },
+  
+  createParameterControl(param, value, randomizeFlag, onValueChange, onRandomizeFlagChange) {
+    const paramRow = document.createElement('div');
+    paramRow.className = 'parameter-row';
+    
+    const label = document.createElement('label');
+    label.textContent = param.label;
+    if (param.min !== undefined && param.max !== undefined) {
+      label.textContent += ` (${param.min}-${param.max})`;
+    }
+    
+    const controlWrapper = document.createElement('div');
+    controlWrapper.className = 'control-wrapper';
+    
+    let control;
+    
+    if (param.type === 'color') {
+      // Color input with randomize helper
+      const colorWithRandom = document.createElement('div');
+      colorWithRandom.className = 'color-with-random';
+      
+      control = document.createElement('input');
+      control.type = 'color';
+      control.value = value;
+      control.addEventListener('input', (e) => onValueChange(e.target.value));
+      
+      const randomizeColorBtn = document.createElement('button');
+      randomizeColorBtn.textContent = '🎨';
+      randomizeColorBtn.title = 'Randomize Color';
+      randomizeColorBtn.addEventListener('click', () => this.handleRandomizeColor(this.appState.selectedLayerId));
+      
+      colorWithRandom.appendChild(control);
+      colorWithRandom.appendChild(randomizeColorBtn);
+      
+      controlWrapper.appendChild(colorWithRandom);
+    } else if (param.type === 'range') {
+      // Range input with value display
+      const rangeWithValue = document.createElement('div');
+      rangeWithValue.className = 'range-with-value';
+      
+      control = document.createElement('input');
+      control.type = 'range';
+      control.min = param.min;
+      control.max = param.max;
+      control.step = param.step;
+      control.value = value;
+      
+      const valueDisplay = document.createElement('span');
+      valueDisplay.className = 'range-value';
+      valueDisplay.textContent = Number(value).toFixed(2);
+      
+      control.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        valueDisplay.textContent = val.toFixed(2);
+        onValueChange(val);
+      });
+      
+      rangeWithValue.appendChild(control);
+      rangeWithValue.appendChild(valueDisplay);
+      
+      controlWrapper.appendChild(rangeWithValue);
+    } else if (param.type === 'select') {
+      // Select dropdown
+      control = document.createElement('select');
+      
+      param.options.forEach(option => {
+        const optionEl = document.createElement('option');
+        optionEl.value = option.value;
+        optionEl.textContent = option.label;
+        optionEl.selected = option.value === value;
+        control.appendChild(optionEl);
+      });
+      
+      control.addEventListener('change', (e) => onValueChange(e.target.value));
+      
+      controlWrapper.appendChild(control);
+    }
+    
+    // Add randomize checkbox
+    const randomizeCheck = document.createElement('input');
+    randomizeCheck.type = 'checkbox';
+    randomizeCheck.title = 'Include in randomization';
+    randomizeCheck.checked = randomizeFlag;
+    randomizeCheck.addEventListener('change', (e) => onRandomizeFlagChange(e.target.checked));
+    
+    const randomizeLabel = document.createElement('span');
+    randomizeLabel.textContent = '🎲';
+    randomizeLabel.title = 'Include in randomization';
+    randomizeLabel.style.marginLeft = '5px';
+    
+    controlWrapper.appendChild(randomizeCheck);
+    controlWrapper.appendChild(randomizeLabel);
+    
+    paramRow.appendChild(label);
+    paramRow.appendChild(controlWrapper);
+    
+    return paramRow;
+  },
+  
+  showMessage(message, duration = 3000) {
+    const overlay = document.getElementById('messageOverlay');
+    overlay.textContent = message;
+    overlay.classList.add('visible');
+    
+    setTimeout(() => {
+      overlay.classList.remove('visible');
+    }, duration);
+  },
+  
+  // Helper method to show a modal dialog
+  showModal(title, content, buttons) {
+    // Remove any existing modal
+    const existingModal = document.querySelector('.modal-helper');
+    if (existingModal) {
+      document.body.removeChild(existingModal);
+    }
+    
+    // Create modal container
+    const modal = document.createElement('div');
+    modal.className = 'modal-helper';
+    
+    // Create modal content
+    const modalContent = document.createElement('div');
+    modalContent.className = 'modal-helper-content';
+    
+    // Add title
+    const titleElement = document.createElement('h3');
+    titleElement.textContent = title;
+    titleElement.style.margin = '0 0 10px 0';
+    modalContent.appendChild(titleElement);
+    
+    // Add content (can be a DOM element or string)
+    if (typeof content === 'string') {
+      const contentElement = document.createElement('div');
+      contentElement.innerHTML = content;
+      modalContent.appendChild(contentElement);
+    } else {
+      modalContent.appendChild(content);
+    }
+    
+    // Add buttons
+    if (buttons && buttons.length > 0) {
+      const buttonContainer = document.createElement('div');
+      buttonContainer.className = 'modal-helper-buttons';
+      
+      buttons.forEach(btn => {
+        const button = document.createElement('button');
+        button.textContent = btn.label;
+        button.className = btn.primary ? 'primary' : '';
+        button.onclick = () => {
+          if (btn.action) {
+            btn.action();
+          }
+          document.body.removeChild(modal);
+        };
+        buttonContainer.appendChild(button);
+      });
+      
+      modalContent.appendChild(buttonContainer);
+    }
+    
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+    
+    return modal;
+  },
+  
+  // Event handlers
+  handleBackgroundColorChange(e) {
+    this.appState.backgroundColor = e.target.value;
+    this.renderer.render();
+  },
+  
+  handleRandomizeBackground() {
+    const newColor = this.appState.randomizeBackground();
+    document.getElementById('bgColor').value = newColor;
+    this.renderer.render();
+    this.showMessage('Background color randomized');
+  },
+  
+  handleSeedChange(e) {
+    this.appState.setSeed(e.target.value);
+    this.showMessage('Seed updated: ' + e.target.value);
+  },
+  
+  handleNewSeed() {
+    const newSeed = this.appState.generateNewSeed();
+    document.getElementById('seedInput').value = newSeed;
+    this.showMessage('New seed generated: ' + newSeed);
+  },
+  
+  handleSaveProject() {
+    const state = this.appState.exportState();
+    const stateStr = JSON.stringify(state, null, 2);
+    
+    // Show the JSON data in a modal for manual copy (primary method)
+    const textarea = document.createElement('textarea');
+    textarea.value = stateStr;
+    textarea.style.width = '100%';
+    textarea.style.height = '200px';
+    textarea.style.fontSize = '16px';
+    textarea.style.fontFamily = 'monospace';
+    
+    const instructions = document.createElement('p');
+    instructions.innerHTML = 'Copy this JSON data and save it to a file with a <strong>.json</strong> extension.<br>You can later load this file to restore your project.';
+    
+    const content = document.createElement('div');
+    content.appendChild(instructions);
+    content.appendChild(textarea);
+    
+    this.showModal('Save Project Data', content, [
+      {
+        label: 'Copy to Clipboard',
+        primary: true,
+        action: () => {
+          textarea.select();
+          document.execCommand('copy');
+          this.showMessage('JSON data copied to clipboard');
+        }
+      },
+      {
+        label: 'Try Download',
+        action: () => {
+          try {
+            const blob = new Blob([stateStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'pattern_project.json';
+            document.body.appendChild(a);
+            a.click();
+            
+            setTimeout(() => {
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+            }, 100);
+            
+            this.showMessage('Project download initiated');
+          } catch (error) {
+            console.error('Error saving project:', error);
+            this.showMessage('Download failed, please use copy method');
+          }
+        }
+      },
+      {
+        label: 'Close'
+      }
+    ]);
+    
+    this.showMessage('Save your project data');
+  },
+  
+  handleLoadProject() {
+    // Try the standard file input method first
+    document.getElementById('fileInput').click();
+    
+    // Also show a modal with a textarea for pasting JSON
+    const textarea = document.createElement('textarea');
+    textarea.placeholder = 'Paste your project JSON here';
+    textarea.style.width = '100%';
+    textarea.style.height = '200px';
+    textarea.style.fontSize = '16px';
+    textarea.style.fontFamily = 'monospace';
+    
+    const instructions = document.createElement('p');
+    instructions.textContent = 'Paste your saved project JSON data here, or use the file browser to select a JSON file';
+    
+    const content = document.createElement('div');
+    content.appendChild(instructions);
+    content.appendChild(textarea);
+    
+    this.showModal('Load Project', content, [
+      {
+        label: 'Load JSON',
+        primary: true,
+        action: () => {
+          try {
+            const data = JSON.parse(textarea.value);
+            if (this.appState.importState(data)) {
+              this.updateUI();
+              this.showMessage('Project loaded successfully');
+            } else {
+              this.showMessage('Error: Invalid project JSON');
+            }
+          } catch (error) {
+            console.error('Error loading project:', error);
+            this.showMessage('Error: Could not parse JSON');
+          }
+        }
+      },
+      {
+        label: 'Cancel'
+      }
+    ]);
+  },
+  
+  handleFileInputChange(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target.result);
+        if (this.appState.importState(data)) {
+          this.updateUI();
+          this.showMessage('Project loaded successfully');
+        } else {
+          this.showMessage('Error: Invalid project file');
+        }
+      } catch (error) {
+        console.error('Error loading file:', error);
+        this.showMessage('Error: Could not parse project file');
+      }
+    };
+    
+    reader.readAsText(file);
+    
+    // Reset file input
+    e.target.value = null;
+  },
+  
+  handleExportImage() {
+    try {
+      const dataUrl = this.renderer.canvas.toDataURL('image/png');
+      
+      // Try standard download approach
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = 'pattern_export.png';
+      document.body.appendChild(a);
+      a.click();
+      
+      setTimeout(() => {
+        document.body.removeChild(a);
+      }, 100);
+      
+      // Also show the image in a modal for screenshot/right-click saving
+      const img = document.createElement('img');
+      img.src = dataUrl;
+      img.style.maxWidth = '100%';
+      img.style.maxHeight = '300px';
+      img.style.border = '1px solid #ccc';
+      img.style.display = 'block';
+      img.style.margin = '0 auto 15px auto';
+      
+      const instructions = document.createElement('p');
+      instructions.innerHTML = 'If the automatic download didn\'t work:<br>Right-click the image and select "Save Image As..." to download';
+      
+      const content = document.createElement('div');
+      content.appendChild(img);
+      content.appendChild(instructions);
+      
+      this.showModal('Export Image', content, [
+        {
+          label: 'Close',
+          primary: true
+        }
+      ]);
+      
+      this.showMessage('Image exported');
+    } catch (error) {
+      console.error('Error exporting image:', error);
+      this.showMessage('Error: Could not export image');
+    }
+  },
+  
+  handleAddLayer() {
+    this.appState.addLayer();
+    this.updateUI();
+    this.showMessage('Layer added');
+  },
+  
+  handleDeleteLayer() {
+    if (this.appState.selectedLayerId !== null) {
+      this.appState.deleteLayer(this.appState.selectedLayerId);
+      this.updateUI();
+      this.showMessage('Layer deleted');
+    }
+  },
+  
+  handleMoveLayerUp() {
+    if (this.appState.selectedLayerId !== null) {
+      this.appState.moveLayerUp(this.appState.selectedLayerId);
+      this.updateUI();
+    }
+  },
+  
+  handleMoveLayerDown() {
+    if (this.appState.selectedLayerId !== null) {
+      this.appState.moveLayerDown(this.appState.selectedLayerId);
+      this.updateUI();
+    }
+  },
+  
+  handleLayerSelect(id) {
+    this.appState.selectedLayerId = id;
+    this.updateUI();
+  },
+  
+  handleLayerVisibilityToggle(id) {
+    this.appState.toggleLayerVisibility(id);
+    this.updateUI();
+  },
+  
+  handleParameterChange(layerId, paramId, value) {
+    this.appState.updateLayerParam(layerId, paramId, value);
+    this.renderer.render();
+  },
+  
+  handleRandomizeFlagChange(layerId, paramId, checked) {
+    this.appState.updateRandomizeFlag(layerId, paramId, checked);
+  },
+  
+  handlePatternTypeChange(layerId, newType) {
+    this.appState.updateLayerType(layerId, newType);
+    this.updateUI();
+  },
+  
+  handleRandomizeLayer(layerId) {
+    this.appState.randomizeLayer(layerId);
+    this.updateUI();
+    this.showMessage('Layer randomized');
+  },
+  
+  handleRandomizeColor(layerId) {
+    const layer = this.appState.layers.find(layer => layer.id === layerId);
+    if (layer && layer.randomizeFlags.color) {
+      layer.params.color = this.appState.prng.nextFlexokiColor();
+      this.updateUI();
+    }
+  },
+  
+  handleWindowResize() {
+    this.renderer.resizeCanvas();
+    this.renderer.render();
+  }
+};
+
+// Application initialization
+document.addEventListener('DOMContentLoaded', () => {
+  // Initialize app state
+  const appState = AppState.init();
+  
+  // Initialize renderer
+  const renderer = Renderer.init(document.getElementById('canvas'), appState);
+  
+  // Initialize UI
+  const ui = UI.init(appState, renderer);
+  
+  // Create initial layers
+  for (let i = 0; i < 3; i++) {
+    appState.addLayer();
+  }
+  
+  // Update UI
+  ui.updateUI();
+});
+  </script>
+</body>
+</html>
