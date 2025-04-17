@@ -12,7 +12,7 @@
     body {
       font-family: Helvetica, Arial, sans-serif;
       margin: 0;
-      padding: 20px;
+      padding: 1rem;
       background-color: #f0f4f8;
       background-image: linear-gradient(to bottom, #e0f2fe, #f0f4f8);
       min-height: 100vh;
@@ -30,10 +30,10 @@
     
     .container {
       background: white;
-      padding: 2rem;
+      padding: 1rem;
       border-radius: 12px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      max-width: 600px;
+      max-width: 1024px;
       width: 90%;
       text-align: center;
     }
@@ -217,13 +217,13 @@
   </style>
 </head>
 <body>
-  <div class="container">
+  <main class="container">
     <h1>
       <span style="display: inline-block; animation: clockspin 3s ease-in-out infinite;" aria-hidden="true">🕒</span> 
-      Australian Clock Change 
+      Australian Dayloight Savings Toime 
       <span aria-hidden="true">🦘</span>
     </h1>
-    <div class="subtitle">G'day! Find your local time change info, mate</div>
+    <div class="subtitle">G'day cobber! Find your local time change info, mate. Ease up turbo!</div>
     
     <div class="timezone-selector">
       <label for="timezone-select" class="sr-only">Select your timezone</label>
@@ -240,12 +240,13 @@
     
     <!-- Fixed height containers to prevent layout jumps -->
     <div id="timezone-info" class="info-box" style="min-height: 100px;"></div>
+    <div id="current-dst" class="info-box" style="min-height: 120px;"></div>
     <div id="past-change" class="info-box" style="min-height: 140px;"></div>
     <div id="future-change" class="info-box" style="min-height: 160px;"></div>
     <div id="body-clock" style="min-height: 120px;"></div>
-    <div id="current-dst" class="info-box" style="min-height: 120px;"></div>
-    <div id="fun-fact" class="fun-fact" aria-live="polite"></div>
-  </div>
+    <div id="fun-fact" class="fun-fact" style ="min-height: 120px" aria-live="polite"></div>
+    <div id="footer" class="footer">
+  </main>
 
   <script type="module">
 // Australian timezone information
