@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON to Markdown Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .drop-zone-active {
+            border-color: #2563eb;
+            background-color: #eff6ff;
+        }
+        /* Custom scrollbar for webkit browsers */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800">
+
+    <main class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900">JSON to Markdown Converter</h1>
+            <p class="mt-2 text-slate-600 max-w-2xl mx-auto">A robust tool to convert complex, nested, and even partial JSON into clean, readable Markdown.</p>
+        </header>
+
+        <div class="flex flex-col lg:flex-row gap-6">
+            <!-- Input Panel -->
+            <section class="lg:w-1/2 flex flex-col" aria-labelledby="input-heading">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 id="input-heading" class="text-lg font-semibold text-slate-900">JSON Input</h2>
+                     <button id="clear-input-btn" class="text-slate-500 hover:text-red-600 transition-colors" aria-label="Clear input">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+                <div id="drop-zone" class="flex-grow bg-white rounded-lg shadow-sm border-2 border-dashed border-slate-300 transition-all flex flex-col">
+                    <textarea id="json-input" class="w-full h-full min-h-[400px] lg:min-h-[60vh] p-4 bg-transparent rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Paste your JSON here, or drag and drop a file..."></textarea>
+                    <div id="drop-overlay" class="hidden absolute inset-0 bg-blue-500 bg-opacity-20 rounded-lg items-center justify-center pointer-events-none">
+                        <p class="text-blue-700 font-semibold text-lg">Drop the file to process</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Output Panel -->
+            <section class="lg:w-1/2 flex flex-col" aria-labelledby="output-heading">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 id="output-heading" class="text-lg font-semibold text-slate-900">Markdown Output</h2>
+                    <div class="flex items-center gap-4">
+                        <button id="copy-btn" class="text-slate-500 hover:text-blue-600 transition-colors" aria-label="Copy Markdown to clipboard">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                        <button id="export-btn" class="text-slate-500 hover:text-green-600 transition-colors" aria-label="Export Markdown as a file">
+                            <i class="fas fa-file-export"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex-grow bg-white rounded-lg shadow-sm p-4 border border-slate-200 overflow-auto min-h-[400px] lg:min-h-[60vh]">
+                    <pre id="markdown-output" class="whitespace-pre-wrap text-sm text-slate-700">Your converted Markdown will appear here.</pre>
+                </div>
+            </section>
+        </div>
+        
+        <div id="toast-notification" class="fixed bottom-5 right-5 bg-slate-900 text-white py-2 px-5 rounded-lg shadow-xl opacity-0 transform translate-y-2 transition-all duration-300">
+            <p>Copied to clipboard!</p>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const jsonInput = document.getElementById('json-input');
+            const markdownOutput = document.getElementById('markdown-output');
+            const dropZone = document.getElementById('drop-zone');
+            const clearInputBtn = document.getElementById('clear-input-btn');
+            const copyBtn = document.getElementById('copy-btn');
+            const exportBtn = document.getElementById('export-btn');
+            const toast = document.getElementById('toast-notification');
+
+            // --- Core Conversion Logic ---
+
+            /**
+             * Attempts to parse a string that might be JSON. It's robust against
+             * surrounding non-JSON text.
+             * @param {string} text - The input string.
+             * @returns {object|null} The parsed object or null if parsing fails.
+             */
+            function robustJsonParse(text) {
+                try {
+                    // Standard parse first
+                    return JSON.parse(text);
+                } catch (e) {
+                    // Try to find the first '{' or '[' and last '}' or ']'
+                    const firstBracket = text.indexOf('{');
+                    const firstSquare = text.indexOf('[');
+                    let start = -1;
+
+                    if (firstBracket === -1) start = firstSquare;
+                    else if (firstSquare === -1) start = firstBracket;
+                    else start = Math.min(firstBracket, firstSquare);
+
+                    if (start === -1) return null; // No JSON structure found
+
+                    const lastBracket = text.lastIndexOf('}');
+                    const lastSquare = text.lastIndexOf(']');
+                    let end = Math.max(lastBracket, lastSquare);
+                    
+                    if (end === -1 || end < start) return null;
+
+                    const potentialJson = text.substring(start, end + 1);
+                    try {
+                        return JSON.parse(potentialJson);
+                    } catch (finalError) {
+                        return null; // Still couldn't parse
+                    }
+                }
+            }
+
+            /**
+             * Recursively converts a JavaScript object/array into a Markdown string.
+             * @param {*} data - The data to convert.
+             * @param {number} level - The current nesting level for headings.
+             * @returns {string} The generated Markdown.
+             */
+            function generateMarkdown(data, level = 1) {
+                if (data === null) return '`null`\n\n';
+                if (data === undefined) return '`undefined`\n\n';
+
+                // Handle arrays
+                if (Array.isArray(data)) {
+                    // Render an array of simple objects as a table for better readability
+                    if (data.length > 0 && data.every(item => typeof item === 'object' && item !== null && !Array.isArray(item))) {
+                        const headers = [...new Set(data.flatMap(obj => Object.keys(obj)))];
+                        if (headers.length > 0) {
+                            let table = `| ${headers.join(' | ')} |\n`;
+                            table += `| ${headers.map(() => '---').join(' | ')} |\n`;
+                            data.forEach(row => {
+                                const rowData = headers.map(header => {
+                                    const value = row[header];
+                                    if (value === null || value === undefined) return '';
+                                    if (typeof value === 'object') return '_{object}_';
+                                    return String(value).replace(/\|/g, '\\|').replace(/\n/g, '<br>');
+                                });
+                                table += `| ${rowData.join(' | ')} |\n`;
+                            });
+                            
+                            // Also provide the full object details below the table for completeness
+                            let details = data.map((item, index) => {
+                                return `${'#'.repeat(level + 1)} Item ${index + 1} (Details)\n\n${generateMarkdown(item, level + 2)}`;
+                            }).join('');
+                            
+                            return table + '\n' + details;
+                        }
+                    }
+                    // For other arrays (primitives, mixed content, etc.)
+                    return data.map((item, index) => {
+                        let content = `- **Item ${index + 1}:**\n`;
+                        const nestedContent = generateMarkdown(item, level + 1).split('\n').map(line => `  ${line}`).join('\n').trim();
+                        return `${content}${nestedContent}\n\n`;
+                    }).join('');
+                }
+
+                // Handle objects
+                if (typeof data === 'object') {
+                    return Object.entries(data).map(([key, value]) => {
+                        let content = `${'#'.repeat(level + 1)} ${key}\n\n`;
+                        content += generateMarkdown(value, level + 2);
+                        return content;
+                    }).join('');
+                }
+                
+                // Handle primitives, with special check for escaped JSON in strings
+                if (typeof data === 'string') {
+                    // Attempt to parse the string as nested JSON
+                    const nestedData = robustJsonParse(data);
+                    if (nestedData && typeof nestedData === 'object') {
+                         let nestedContent = `<details>\n<summary><em>(Nested JSON String)</em></summary>\n\n`;
+                         nestedContent += generateMarkdown(nestedData, level + 1);
+                         nestedContent += `\n</details>\n\n`;
+                         return nestedContent;
+                    }
+                    // Just a regular string, display in a code block
+                    return `\`\`\`\n${data}\n\`\`\`\n\n`;
+                }
+
+                // Other primitives (number, boolean)
+                return `\`${String(data)}\`\n\n`;
+            }
+
+            /**
+             * Main conversion function triggered by user input.
+             */
+            function convert() {
+                const text = jsonInput.value.trim();
+                if (!text) {
+                    markdownOutput.textContent = 'Your converted Markdown will appear here.';
+                    return;
+                }
+
+                const jsonObject = robustJsonParse(text);
+
+                if (jsonObject === null) {
+                    markdownOutput.textContent = `## ⚠️ Conversion Error\n\nCould not parse the provided input as JSON. This tool can handle some formatting issues, but the input must contain a valid JSON structure.\n\nPlease check for:\n- Missing brackets \`{}\` or braces \`[]\`\n- Trailing commas\n- Unquoted keys`;
+                } else {
+                    markdownOutput.textContent = generateMarkdown(jsonObject);
+                }
+            }
+
+            // --- Event Listeners ---
+            
+            jsonInput.addEventListener('input', convert);
+            
+            clearInputBtn.addEventListener('click', () => {
+                jsonInput.value = '';
+                jsonInput.dispatchEvent(new Event('input')); // Trigger conversion to clear output
+            });
+
+            copyBtn.addEventListener('click', () => {
+                const textToCopy = markdownOutput.textContent;
+                if(navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(textToCopy).then(() => showToast('Copied to clipboard!'));
+                } else {
+                   // Fallback for non-secure contexts (like some iframes)
+                   const textArea = document.createElement("textarea");
+                   textArea.value = textToCopy;
+                   textArea.style.position = "fixed";
+                   textArea.style.left = "-999999px";
+                   document.body.appendChild(textArea);
+                   textArea.focus();
+                   textArea.select();
+                   try {
+                       document.execCommand('copy');
+                       showToast('Copied to clipboard!');
+                   } catch (err) {
+                       showToast('Failed to copy!', true);
+                   }
+                   document.body.removeChild(textArea);
+                }
+            });
+
+            exportBtn.addEventListener('click', () => {
+                const textToExport = markdownOutput.textContent;
+                const blob = new Blob([textToExport], { type: 'text/markdown;charset=utf-t' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'converted.md';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+
+            // Drag and Drop functionality
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.add('drop-zone-active'), false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.remove('drop-zone-active'), false);
+            });
+
+            dropZone.addEventListener('drop', handleDrop, false);
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+
+                if (files.length > 0) {
+                    const file = files[0];
+                    const reader = new FileReader();
+                    reader.readAsText(file);
+                    reader.onload = function(event) {
+                        jsonInput.value = event.target.result;
+                        convert();
+                    };
+                }
+            }
+            
+            // Toast notification
+            function showToast(message, isError = false) {
+                toast.textContent = message;
+                toast.className = `fixed bottom-5 right-5 text-white py-2 px-5 rounded-lg shadow-xl opacity-0 transform translate-y-2 transition-all duration-300 ${isError ? 'bg-red-600' : 'bg-slate-900'}`;
+                
+                toast.classList.remove('opacity-0', 'translate-y-2');
+                toast.classList.add('opacity-100', 'translate-y-0');
+
+                setTimeout(() => {
+                    toast.classList.remove('opacity-100', 'translate-y-0');
+                    toast.classList.add('opacity-0', 'translate-y-2');
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>
