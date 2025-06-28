@@ -50,7 +50,7 @@
                         <i class="fas fa-trash-alt"></i>
                     </button>
                 </div>
-                <div id="drop-zone" class="flex-grow bg-white rounded-lg shadow-sm border-2 border-dashed border-slate-300 transition-all flex flex-col">
+                <div id="drop-zone" class="flex-grow bg-white rounded-lg shadow-sm border-2 border-dashed border-slate-300 transition-all flex flex-col relative">
                     <textarea id="json-input" class="w-full h-full min-h-[400px] lg:min-h-[60vh] p-4 bg-transparent rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Paste your JSON here, or drag and drop a file..."></textarea>
                     <div id="drop-overlay" class="hidden absolute inset-0 bg-blue-500 bg-opacity-20 rounded-lg items-center justify-center pointer-events-none">
                         <p class="text-blue-700 font-semibold text-lg">Drop the file to process</p>
@@ -96,11 +96,11 @@
 
             /**
              * Attempts to parse a string that might be JSON. It's robust against
-             * surrounding non-JSON text.
+             * surrounding non-JSON text and partial JSON.
              * @param {string} text - The input string.
              * @returns {object|null} The parsed object or null if parsing fails.
              */
-            function robustJsonParse(text) {
+            function initialParse(text) {
                 try {
                     // Standard parse first
                     return JSON.parse(text);
@@ -130,7 +130,7 @@
                     }
                 }
             }
-
+            
             /**
              * Recursively converts a JavaScript object/array into a Markdown string.
              * @param {*} data - The data to convert.
@@ -143,7 +143,6 @@
 
                 // Handle arrays
                 if (Array.isArray(data)) {
-                    // Render an array of simple objects as a table for better readability
                     if (data.length > 0 && data.every(item => typeof item === 'object' && item !== null && !Array.isArray(item))) {
                         const headers = [...new Set(data.flatMap(obj => Object.keys(obj)))];
                         if (headers.length > 0) {
@@ -158,16 +157,12 @@
                                 });
                                 table += `| ${rowData.join(' | ')} |\n`;
                             });
-                            
-                            // Also provide the full object details below the table for completeness
                             let details = data.map((item, index) => {
-                                return `${'#'.repeat(level + 1)} Item ${index + 1} (Details)\n\n${generateMarkdown(item, level + 2)}`;
+                                return `${'#'.repeat(Math.min(level + 1, 6))} Item ${index + 1} (Details)\n\n${generateMarkdown(item, level + 2)}`;
                             }).join('');
-                            
                             return table + '\n' + details;
                         }
                     }
-                    // For other arrays (primitives, mixed content, etc.)
                     return data.map((item, index) => {
                         let content = `- **Item ${index + 1}:**\n`;
                         const nestedContent = generateMarkdown(item, level + 1).split('\n').map(line => `  ${line}`).join('\n').trim();
@@ -178,24 +173,51 @@
                 // Handle objects
                 if (typeof data === 'object') {
                     return Object.entries(data).map(([key, value]) => {
-                        let content = `${'#'.repeat(level + 1)} ${key}\n\n`;
-                        content += generateMarkdown(value, level + 2);
+                        const cappedLevel = Math.min(level, 5) + 1; // Cap at level 6 (#####)
+                        let content = `${'#'.repeat(cappedLevel)} ${key}\n\n`;
+                        content += generateMarkdown(value, level + 1);
                         return content;
                     }).join('');
                 }
                 
-                // Handle primitives, with special check for escaped JSON in strings
+                // Handle primitives, with special logic for strings
                 if (typeof data === 'string') {
-                    // Attempt to parse the string as nested JSON
-                    const nestedData = robustJsonParse(data);
-                    if (nestedData && typeof nestedData === 'object') {
-                         let nestedContent = `<details>\n<summary><em>(Nested JSON String)</em></summary>\n\n`;
-                         nestedContent += generateMarkdown(nestedData, level + 1);
-                         nestedContent += `\n</details>\n\n`;
-                         return nestedContent;
+                    // This new logic distinguishes between strings that *are* escaped JSON
+                    // and strings that just *contain* some JSON text (like a stack trace).
+                    let currentString = data;
+                    let nestedData = null;
+                    let parseSucceeded = false;
+
+                    // Try to parse the string. If it parses to a new string, try again.
+                    // This handles double/triple/etc. escaped JSON.
+                    for (let i = 0; i < 5; i++) { // Safety limit
+                        try {
+                            const parsed = JSON.parse(currentString);
+                            if (typeof parsed === 'string') {
+                                currentString = parsed; // Parsed to another string, un-escaping one level.
+                            } else if (typeof parsed === 'object' && parsed !== null) {
+                                nestedData = parsed; // Successfully parsed to an object.
+                                parseSucceeded = true;
+                                break;
+                            } else {
+                                break; // Parsed to number/bool/null.
+                            }
+                        } catch (e) {
+                            break; // Not valid JSON.
+                        }
                     }
-                    // Just a regular string, display in a code block
-                    return `\`\`\`\n${data}\n\`\`\`\n\n`;
+
+                    if (parseSucceeded && nestedData) {
+                        // The *entire* string was valid, escaped JSON. Expand it.
+                        let nestedContent = `<details>\n<summary><em>(Nested JSON String)</em></summary>\n\n`;
+                        nestedContent += generateMarkdown(nestedData, level + 1);
+                        nestedContent += `\n</details>\n\n`;
+                        return nestedContent;
+                    } else {
+                        // The string is either not JSON, or contains non-JSON text.
+                        // Display it as-is in a code block to preserve all content.
+                        return `\`\`\`\n${data}\n\`\`\`\n\n`;
+                    }
                 }
 
                 // Other primitives (number, boolean)
@@ -212,7 +234,7 @@
                     return;
                 }
 
-                const jsonObject = robustJsonParse(text);
+                const jsonObject = initialParse(text);
 
                 if (jsonObject === null) {
                     markdownOutput.textContent = `## ⚠️ Conversion Error\n\nCould not parse the provided input as JSON. This tool can handle some formatting issues, but the input must contain a valid JSON structure.\n\nPlease check for:\n- Missing brackets \`{}\` or braces \`[]\`\n- Trailing commas\n- Unquoted keys`;
@@ -235,7 +257,6 @@
                 if(navigator.clipboard && window.isSecureContext) {
                     navigator.clipboard.writeText(textToCopy).then(() => showToast('Copied to clipboard!'));
                 } else {
-                   // Fallback for non-secure contexts (like some iframes)
                    const textArea = document.createElement("textarea");
                    textArea.value = textToCopy;
                    textArea.style.position = "fixed";
@@ -255,7 +276,7 @@
 
             exportBtn.addEventListener('click', () => {
                 const textToExport = markdownOutput.textContent;
-                const blob = new Blob([textToExport], { type: 'text/markdown;charset=utf-t' });
+                const blob = new Blob([textToExport], { type: 'text/markdown;charset=utf-8' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
